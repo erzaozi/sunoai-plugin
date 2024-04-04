@@ -54,7 +54,7 @@ class sunoCookie {
             // 设置token
             this.token = response.data.jwt
             // 获取请求头set-cookie字段
-            let set_cookie = response.headers['set-cookie'] || ''
+            let set_cookie = response.headers['set-cookie'] || ['']
             // set_cookie是字符串数组
             this.setCookie(set_cookie)
         } catch (err) {
@@ -78,7 +78,7 @@ class sunoCookie {
     }
     // 将Cookie字符串转换成键值对
     cookieStr2Object(cookieStr) {
-        const konwnAttibutes = ['path', 'domain', 'max-Age', 'secure', 'sameSite', 'expires', 'httpOnly']
+        const konwnAttibutes = ['path', 'Path', 'domain', 'Domain', 'max-Age', 'Max-Age', 'secure', 'Secure', 'sameSite', 'SameSite', 'expires', 'Expires', 'httpOnly', 'HttpOnly']
         let cookies = {}
         // 过滤set-cookie中非cookie的属性
         cookieStr.split(';').forEach(item => {
