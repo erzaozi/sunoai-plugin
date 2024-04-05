@@ -1,0 +1,48 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta http-equiv="content-type" content="text/html;charset=utf-8" />
+    <link rel="shortcut icon" href="#" />
+    <link rel="stylesheet" type="text/css" href="{{pluginResources}}/listTemp/listTemp.css" />
+    <link rel="preload" href="{{pluginResources}}/font/SF-Pro-Display-Medium.otf" as="font">
+    <link rel="preload" href="{{pluginResources}}/font/PingFangSC-Medium.otf" as="font">
+</head>
+
+<body id="container" class="body_box">
+    <div class="container">
+        <div class="info_box">
+            <div class="head_box">
+                <div class="id_text">
+                    {{header}}
+                </div>
+                <div class="lable">{{lable}}</div>
+            </div>
+            <div class="data_box">
+                <div class="tab-lable">{{sidebar}}</div>
+                <div class="song_list">
+                    <div class="avatar th">
+                        <div class="index">#</div>
+                        <div class="song-name">{{tab1}}</div>
+                        <div class="example">{{tab2}}</div>
+                    </div>
+                    {{each List song idx}}
+                    <div class="avatar {{song.able}}">
+                        <div class="index">{{idx+1}}</div>
+                        <div class="song-name">{{song.key}}</div>
+                        <div class="image"
+                            style="display: flex; justify-content: center; align-items: center; height: 100%;">
+                            <img src="data:image/png;base64,{{song.value}}" alt="Song Image"
+                                style="width:60px; height:60px;">
+                        </div>
+                    </div>
+                    {{/each}}
+                </div>
+                <p class="notice">{{notice}}</p>
+            </div>
+            <div class="logo">Created By Yunzai-Bot & SunoAI-Plugin</div>
+        </div>
+    </div>
+</body>
+
+</html>
