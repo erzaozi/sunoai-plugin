@@ -1,3 +1,10 @@
 cookie_pool: []
 use_cookie: 0
+save_data:
+  metadata: true
+  lyric: true
+  cover: true
+  audio: true
+  video: false
 send_type: 0
+await_time: 60

@@ -1,6 +1,8 @@
 import axios from 'axios';
 import fs from 'fs';
 import path from 'path';
+import Config from './Config.js';
+import { pluginResources } from '../model/path.js';
 
 const baseUrl = 'https://studio-api.suno.ai';
 const maxRetryTimes = 5;
@@ -124,7 +126,7 @@ class SunoAI {
             throw new Error('需要有效参数');
         }
         try {
-            const response = await axios.post(`${baseUrl}/api/generate/v2/`, payload);
+            const response = await this.axiosInstance.post(`${baseUrl}/api/generate/v2/`, payload);
             if (response.status !== 200) {
                 console.error(response.statusText);
                 throw new Error(`Error response ${response.status}`);
@@ -145,9 +147,11 @@ class SunoAI {
     // 获取指定歌曲的元数据
     async getMetadata(ids) {
         try {
+            // 获取配置文件
+            let config = await Config.getConfig()
             // 如果歌曲未生成，重试
             let retryTimes = 0;
-            const maxRetryTimes = 20;
+            const maxRetryTimes = config.await_time || 20;
 
             let params = {};
             if (ids && ids.length > 0) {
@@ -164,7 +168,13 @@ class SunoAI {
                 let data = response?.data;
 
                 if (data[0]?.audio_url && data[1]?.audio_url) {
-                    return data;
+                    if (config.save_data.video) {
+                        if (data[0]?.video_url && data[1]?.video_url) {
+                            return data;
+                        }
+                    } else {
+                        return data;
+                    }
                 }
                 else {
                     if (retryTimes > maxRetryTimes) {
@@ -195,12 +205,12 @@ class SunoAI {
     }
 
     // 将生成的歌曲保存到指定目录
-    async saveSongs(songsInfo, outputDir) {
+    async saveSongs(songsInfo) {
         try {
-            // 如果输出目录不存在，创建该目录
-            if (!fs.existsSync(outputDir)) {
-                fs.mkdirSync(outputDir, { recursive: true });
-            }
+            // 获取配置文件
+            let config = await Config.getConfig().save_data
+
+            let outputDir = pluginResources + '/output'
 
             for (let i = 0; i < songsInfo.length; i++) {
                 let songInfo = songsInfo[i];
@@ -219,55 +229,65 @@ class SunoAI {
                 const lrcPath = path.join(outputDir, `${fileName}.lrc`);
                 const imagePath = path.join(outputDir, `${fileName}.png`);
 
-                // 保存信息
-                fs.writeFileSync(jsonPath, JSON.stringify(songInfo, null, 2), 'utf-8');
-                console.log("信息已下载");
-
-                // 保存歌词
-                // 等待处理！！！！！
-                fs.writeFileSync(lrcPath, `${title}\n\n${lyric}`, 'utf-8');
-                console.log("歌词已下载");
-
-                // 保存封面
-                const imageResponse = await axios.get(image_large_url, { responseType: 'stream' });
-                if (imageResponse.status !== 200) {
-                    throw new Error('无法下载封面');
+                if (config.metadata) {
+                    // 保存信息
+                    fs.writeFileSync(jsonPath, JSON.stringify(songInfo, null, 2), 'utf-8');
+                    console.log("信息已下载");
                 }
-                const imageFileStream = fs.createWriteStream(imagePath);
-                imageResponse.data.pipe(imageFileStream);
-                await new Promise((resolve, reject) => {
-                    imageFileStream.on('finish', resolve);
-                    imageFileStream.on('error', reject);
-                });
-                console.log("封面已下载");
 
-                // 保存歌曲
-                console.log("歌曲下载中...");
-                const response = await axios.get(audio_url, { responseType: 'stream' });
-                if (response.status !== 200) {
-                    throw new Error('无法下载歌曲');
+                if (config.lyrics) {
+                    // 保存歌词
+                    // 等待处理！！！！！
+                    fs.writeFileSync(lrcPath, `${title}\n\n${lyric}`, 'utf-8');
+                    console.log("歌词已下载");
                 }
-                const fileStream = fs.createWriteStream(mp3Path);
-                response.data.pipe(fileStream);
-                await new Promise((resolve, reject) => {
-                    fileStream.on('finish', resolve);
-                    fileStream.on('error', reject);
-                });
-                console.log("歌曲已下载");
 
-                // 保存视频
-                console.log("视频下载中...");
-                const videoResponse = await axios.get(video_url, { responseType: 'stream' });
-                if (videoResponse.status !== 200) {
-                    throw new Error('无法下载视频');
+                if (config.cover) {
+                    // 保存封面
+                    const imageResponse = await axios.get(image_large_url, { responseType: 'stream' });
+                    if (imageResponse.status !== 200) {
+                        throw new Error('无法下载封面');
+                    }
+                    const imageFileStream = fs.createWriteStream(imagePath);
+                    imageResponse.data.pipe(imageFileStream);
+                    await new Promise((resolve, reject) => {
+                        imageFileStream.on('finish', resolve);
+                        imageFileStream.on('error', reject);
+                    });
+                    console.log("封面已下载");
                 }
-                const videoFileStream = fs.createWriteStream(mp4Path);
-                videoResponse.data.pipe(videoFileStream);
-                await new Promise((resolve, reject) => {
-                    videoFileStream.on('finish', resolve);
-                    videoFileStream.on('error', reject);
-                })
-                console.log("视频已下载");
+
+                if (config.audio) {
+                    // 保存歌曲
+                    console.log("歌曲下载中...");
+                    const response = await axios.get(audio_url, { responseType: 'stream' });
+                    if (response.status !== 200) {
+                        throw new Error('无法下载歌曲');
+                    }
+                    const fileStream = fs.createWriteStream(mp3Path);
+                    response.data.pipe(fileStream);
+                    await new Promise((resolve, reject) => {
+                        fileStream.on('finish', resolve);
+                        fileStream.on('error', reject);
+                    });
+                    console.log("歌曲已下载");
+                }
+
+                if (config.video) {
+                    // 保存视频
+                    console.log("视频下载中...");
+                    const response = await axios.get(video_url, { responseType: 'stream' });
+                    if (response.status !== 200) {
+                        throw new Error('无法下载视频');
+                    }
+                    const fileStream = fs.createWriteStream(mp4Path);
+                    response.data.pipe(fileStream);
+                    await new Promise((resolve, reject) => {
+                        fileStream.on('finish', resolve);
+                        fileStream.on('error', reject);
+                    })
+                    console.log("视频已下载");
+                }
             }
         } catch (e) {
             console.error(e);
