@@ -1,68 +1,319 @@
-import axios from 'axios'
-import { HttpsProxyAgent } from 'https-proxy-agent';
-import Cookie from './Cookie.js'
-import Config from './Config.js'
-import Log from '../utils/logs.js';
+import axios from 'axios';
+import fs from 'fs';
+import path from 'path';
 
-// 请求头
-const common_headers = {
-    "Origin": "https://app.suno.ai",
-    "Referer": "https://app.suno.ai/",
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0",
-    "Content-Type": "application/json; charset=utf-8",
-}
+const baseUrl = 'https://studio-api.suno.ai';
+const maxRetryTimes = 5;
 
-// 默认参数
-const param = {
-    // 歌词
-    "prompt": "[Verse]\nWake up in the morning, feeling brand new\nGonna shake off the worries, leave 'em in the rearview\nStep outside, feeling the warmth on my face\nThere's something 'bout the sunshine that puts me in my place\n\n[Verse 2]\nWalking down the street, got a spring in my step\nThe rhythm in my heart, it just won't forget\nEverywhere I go, people smiling at me\nThey can feel the joy, it's contagious, can't you see?\n\n[Chorus]\nI got sunshine in my pocket, happiness in my soul\nA skip in my stride, and I'm ready to go\nNothing gonna bring me down, gonna keep on shining bright\nI got sunshine in my pocket, this world feels so right",
-    // 曲风
-    "tags": "heartfelt anime",
-    // 模型
-    "mv": "chirp-v3-0",
-    // 标题
-    "title": "Sunshine in your Pocket",
-    "continue_clip_id": null,
-    "continue_at": null,
-}
+class SunoAI {
+    constructor(cookie) {
+        this.cookie = cookie;
+        this.headers = {
+            "Accept-Encoding": "gzip, deflate, br",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3",
+            "Cookie": cookie
+        };
+        this.sid = null;
+        this.retryTime = 0;
 
-async function sunoFetch(url, method = 'post', data = null) {
-    try {
-        const headers = { ...common_headers, Authorization: `Bearer ${Cookie.token}` }
-        let agent = null
-        // 获取代理
-        if (Config.getConfig().proxy.enable) {
-            let proxy = 'http://' + Config.getConfig().proxy.host + ':' + Config.getConfig().proxy.port
-            agent = new HttpsProxyAgent(proxy)
+        // 创建一个带Cookie实例
+        this.axiosInstance = axios.create({
+            headers: this.headers
+        });
+
+        // 保持令牌更新
+        this.authUpdateTime = null;
+        this.axiosInstance.interceptors.request.use(async (config) => {
+            if (this.retryTime > maxRetryTimes) {
+                throw new Error('重试次数过多，已停止重试');
+            }
+            if (config.url.startsWith(baseUrl)) {
+                if (!this.authUpdateTime || Date.now() - this.authUpdateTime > 45000) {
+                    await this._renew();
+                }
+                config.headers = this.headers;
+            }
+            return config;
+        });
+        this.axiosInstance.interceptors.response.use(
+            async (response) => {
+                if (response.config.url.startsWith(baseUrl) && response.data?.detail === 'Unauthorized') {
+                    this.retryTime += 1;
+                    response = await this.axiosInstance.request(response.config);
+                }
+                else {
+                    this.retryTime = 0;
+                }
+                return response;
+            },
+            async (error) => {
+                if (error.config.url.startsWith(baseUrl) && error.response?.status === 401) {
+                    this.retryTime += 1;
+                    error.response = await this.axiosInstance.request(error.config);
+                }
+                else {
+                    this.retryTime = 0;
+                }
+                return error.response;
+            }
+        );
+    }
+
+    // 初始化 SunoAI 实例，必须在使用其他方法之前调用
+    async init() {
+        try {
+            const response = await this.axiosInstance.request({
+                method: 'GET',
+                url: 'https://clerk.suno.ai/v1/client',
+                params: { _clerk_js_version: '4.70.5' },
+                headers: {
+                    Cookie: this.cookie
+                }
+            })
+            const data = response.data;
+            const r = data.response;
+            let sid;
+            if (r) {
+                sid = r.last_active_session_id;
+            }
+            if (!sid) {
+                throw new Error('无法获取会话ID');
+            }
+            this.sid = sid;
+            await this._renew();
         }
-        return await axios({ url: url, method: method, headers: headers, data: data }) 
-    } catch (err) {
-        Log.e(err)
-        return null
+        catch (e) {
+            console.error(e);
+            throw e;
+        }
+    }
+
+    // 对于每个会话，授权令牌的有效期为60秒
+    async _renew() {
+        try {
+            const tokenResponse = await this.axiosInstance.request({
+                method: 'POST',
+                url: `https://clerk.suno.ai/v1/client/sessions/${this.sid}/tokens/api?_clerk_js_version=4.70.5`,
+                headers: {
+                    Cookie: this.cookie
+                }
+            })
+            const tokenData = tokenResponse.data;
+            const token = tokenData?.jwt;
+            this.headers.Authorization = `Bearer ${token}`;
+            this.authUpdateTime = Date.now();
+        }
+        catch (e) {
+            console.error(e);
+            throw e;
+        }
+    }
+    // 获取剩余的请求次数
+    async getLimitLeft() {
+        const response = await this.axiosInstance.request({
+            method: 'GET',
+            url: `${baseUrl}/api/billing/info/`
+        })
+        const data = response.data;
+        return data;
+    }
+
+    // 获取请求 ID 列表
+    async getRequestIds(payload) {
+        if (!payload) {
+            throw new Error('需要有效参数');
+        }
+        try {
+            const response = await axios.post(`${baseUrl}/api/generate/v2/`, payload);
+            if (response.status !== 200) {
+                console.error(response.statusText);
+                throw new Error(`Error response ${response.status}`);
+            }
+
+            const responseBody = response.data;
+            const songsMetaInfo = responseBody.clips;
+            const requestIds = songsMetaInfo.map(info => info.id);
+            console.log(requestIds);
+
+            return requestIds;
+        } catch (e) {
+            console.error(e);
+            throw e;
+        }
+    }
+
+    // 获取指定歌曲的元数据
+    async getMetadata(ids) {
+        try {
+            // 如果歌曲未生成，重试
+            let retryTimes = 0;
+            const maxRetryTimes = 20;
+
+            let params = {};
+            if (ids && ids.length > 0) {
+                params.ids = ids.join(',');
+            }
+
+            while (true) {
+                const response = await this.axiosInstance.request({
+                    method: 'GET',
+                    url: `${baseUrl}/api/feed/`,
+                    params
+                });
+
+                let data = response?.data;
+
+                if (data[0]?.audio_url && data[1]?.audio_url) {
+                    return data;
+                }
+                else {
+                    if (retryTimes > maxRetryTimes) {
+                        throw new Error('生成歌曲失败');
+                    }
+                    else {
+                        console.log('正在重试...');
+                        await new Promise(resolve => setTimeout(resolve, 5000));
+                        retryTimes += 1;
+                    }
+                }
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    // 生成歌曲
+    async generateSongs(payload) {
+        try {
+            const requestIds = await this.getRequestIds(payload);
+            const songsInfo = await this.getMetadata(requestIds);
+            return songsInfo;
+        } catch (e) {
+            console.error(e);
+            throw e;
+        }
+    }
+
+    // 将生成的歌曲保存到指定目录
+    async saveSongs(songsInfo, outputDir) {
+        try {
+            // 如果输出目录不存在，创建该目录
+            if (!fs.existsSync(outputDir)) {
+                fs.mkdirSync(outputDir, { recursive: true });
+            }
+
+            for (let i = 0; i < songsInfo.length; i++) {
+                let songInfo = songsInfo[i];
+                let title = songInfo.title;
+                let lyric = songInfo.metadata.prompt.replace(/\[.*?\]/g, '');
+                let audio_url = songInfo.audio_url;
+                let video_url = songInfo.video_url;
+                let image_large_url = songInfo.image_large_url;
+                let fileName = `${title.replace(/ /g, '_')}_${i}`;
+
+                console.log(`保存 ${fileName}`);
+
+                const jsonPath = path.join(outputDir, `${fileName}.json`);
+                const mp3Path = path.join(outputDir, `${fileName}.mp3`);
+                const mp4Path = path.join(outputDir, `${fileName}.mp4`);
+                const lrcPath = path.join(outputDir, `${fileName}.lrc`);
+                const imagePath = path.join(outputDir, `${fileName}.png`);
+
+                // 保存信息
+                fs.writeFileSync(jsonPath, JSON.stringify(songInfo, null, 2), 'utf-8');
+                console.log("信息已下载");
+
+                // 保存歌词
+                // 等待处理！！！！！
+                fs.writeFileSync(lrcPath, `${title}\n\n${lyric}`, 'utf-8');
+                console.log("歌词已下载");
+
+                // 保存封面
+                const imageResponse = await axios.get(image_large_url, { responseType: 'stream' });
+                if (imageResponse.status !== 200) {
+                    throw new Error('无法下载封面');
+                }
+                const imageFileStream = fs.createWriteStream(imagePath);
+                imageResponse.data.pipe(imageFileStream);
+                await new Promise((resolve, reject) => {
+                    imageFileStream.on('finish', resolve);
+                    imageFileStream.on('error', reject);
+                });
+                console.log("封面已下载");
+
+                // 保存歌曲
+                console.log("歌曲下载中...");
+                const response = await axios.get(audio_url, { responseType: 'stream' });
+                if (response.status !== 200) {
+                    throw new Error('无法下载歌曲');
+                }
+                const fileStream = fs.createWriteStream(mp3Path);
+                response.data.pipe(fileStream);
+                await new Promise((resolve, reject) => {
+                    fileStream.on('finish', resolve);
+                    fileStream.on('error', reject);
+                });
+                console.log("歌曲已下载");
+
+                // 保存视频
+                console.log("视频下载中...");
+                const videoResponse = await axios.get(video_url, { responseType: 'stream' });
+                if (videoResponse.status !== 200) {
+                    throw new Error('无法下载视频');
+                }
+                const videoFileStream = fs.createWriteStream(mp4Path);
+                videoResponse.data.pipe(videoFileStream);
+                await new Promise((resolve, reject) => {
+                    videoFileStream.on('finish', resolve);
+                    videoFileStream.on('error', reject);
+                })
+                console.log("视频已下载");
+            }
+        } catch (e) {
+            console.error(e);
+            throw e;
+        }
+    }
+
+    // 获取所有生成的歌曲元数据
+    async getAllSongs() {
+        try {
+            const data = await this.getMetadata();
+            return data;
+        } catch (e) {
+            console.error(e);
+            throw e;
+        }
+    }
+
+    // 生成歌词
+    async generateLyrics(prompt) {
+        try {
+            const requestId = await this.axiosInstance.request({
+                method: 'POST',
+                url: `${baseUrl}/api/generate/lyrics/`,
+                data: { prompt }
+            })
+            let id = requestId?.data?.id;
+            while (true) {
+                const response = await this.axiosInstance.request({
+                    method: 'GET',
+                    url: `${baseUrl}/api/generate/lyrics/${id}`,
+                })
+                let data = response?.data;
+                if (data?.status === 'complete') {
+                    return data;
+                }
+                else {
+                    // console.log('重试中...');
+                    await new Promise(resolve => setTimeout(resolve, 300));
+                }
+            }
+        } catch (e) {
+            console.error(e);
+            throw e;
+        }
     }
 }
 
-async function getFeed(data) {
-    const url = `${Config.getConfig().base_url}/api/feed/`
-    return await sunoFetch(url, 'get', data)
-}
-
-async function generateMusic(data) {
-    const url = `${Config.getConfig().base_url}/api/generate/v2/`
-    return await sunoFetch(url, 'post', data)
-}
-
-async function generateLyrics(prompt) {
-    const url = `${Config.getConfig().base_url}/api/generate/lyrics/`
-    const data = {
-        prompt: prompt
-    }
-    return await sunoFetch(url, 'post', data)
-}
-
-async function getLyrics(lid) {
-    const url = `${Config.getConfig().base_url}/api/generate/lyrics/${lid}`
-    return await sunoFetch(url, 'get', data)
-}
-
-export { getFeed, generateMusic, generateLyrics, getLyrics }
+export default SunoAI;

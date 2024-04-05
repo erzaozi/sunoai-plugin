@@ -15,7 +15,7 @@ try {
  */
 class Log {
   constructor () {
-    this.header = `【sunoai-Plugin v${currentVersion}】`
+    this.header = `【SunoAI-Plugin v${currentVersion}】`
   }
 
   /** 快捷执行logger.info( )  */
