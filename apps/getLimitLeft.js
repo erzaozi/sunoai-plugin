@@ -16,7 +16,7 @@ export class LimitLeft extends plugin {
             rule: [
                 {
                     /** 命令正则匹配 */
-                    reg: '^(\/|#)(suno(ai)?)?账户状态$',
+                    reg: '^(\/|#)(suno(ai)?)?账号状态$',
                     /** 执行方法 */
                     fnc: 'limitleft'
                 }

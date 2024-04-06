@@ -137,9 +137,11 @@ body {
   padding-right: 5px;
 }
 
+.cover-name, 
 .song-name {
-  font-size: 15px
+  font-size: 15px;
 }
+
 .song_list .avatar.th > div {
   box-shadow: none;
 }

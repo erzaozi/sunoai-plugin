@@ -24,12 +24,12 @@
                     <div class="avatar th">
                         <div class="index">#</div>
                         <div class="song-name">{{tab1}}</div>
-                        <div class="example">{{tab2}}</div>
+                        <div class="cover-name">{{tab2}}</div>
                     </div>
                     {{each List song idx}}
                     <div class="avatar {{song.able}}">
                         <div class="index">{{idx+1}}</div>
-                        <div class="song-name">{{song.key}}</div>
+                        <div class="song-key">{{song.key}}</div>
                         <div class="image"
                             style="display: flex; justify-content: center; align-items: center; height: 100%;">
                             <img src="data:image/png;base64,{{song.value}}" alt="Song Image"

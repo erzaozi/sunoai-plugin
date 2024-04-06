@@ -145,7 +145,7 @@ class SunoAI {
     }
 
     // 获取指定歌曲的元数据
-    async getMetadata(ids = [], page = 0) {
+    async getMetadata(ids) {
         try {
             // 获取配置文件
             let config = await Config.getConfig()
@@ -154,49 +154,40 @@ class SunoAI {
             const maxRetryTimes = config.await_time || 20;
 
             let params = {};
-            if (ids && ids.length > 0) {
+            if (Array.isArray(ids) && ids.length > 0) {
                 params.ids = ids.join(',');
-            } else {
-                params.page = page;
+            } else if (typeof ids === 'number') {
+                params.page = ids;
             }
 
-            // 查询的结果
-            let data = [];
-
-            if (params.ids) {
-                while (true) {
-                    const response = await this.axiosInstance.request({
-                        method: 'GET',
-                        url: `${baseUrl}/api/feed/`,
-                        params
-                    });
-
-                    data = response?.data;
-
-                    if (data[0]?.audio_url && data[1]?.audio_url) {
-                        if (!config.save_data.video || data[0]?.video_url && data[1]?.video_url) {
-                            return data;
-                        }
-                    } else {
-                        if (retryTimes > maxRetryTimes) {
-                            throw new Error('生成歌曲失败');
-                        }
-                        else {
-                            console.log('正在重试...');
-                            await new Promise(resolve => setTimeout(resolve, 5000));
-                            retryTimes += 1;
-                        }
-                    }
-                }
-            } else {
+            while (true) {
                 const response = await this.axiosInstance.request({
                     method: 'GET',
                     url: `${baseUrl}/api/feed/`,
                     params
-                })
-                return response?.data
-            }
+                });
 
+                let data = response?.data;
+
+                if (typeof ids === 'number') {
+                    return data;
+                }
+
+                if (data[0]?.audio_url && data[1]?.audio_url) {
+                    if (!config.save_data.video || data[0]?.video_url && data[1]?.video_url) {
+                        return data;
+                    }
+                } else {
+                    if (retryTimes > maxRetryTimes) {
+                        throw new Error('生成歌曲失败');
+                    }
+                    else {
+                        console.log('正在重试...');
+                        await new Promise(resolve => setTimeout(resolve, 5000));
+                        retryTimes += 1;
+                    }
+                }
+            }
         } catch (e) {
             console.error(e);
         }
@@ -305,10 +296,10 @@ class SunoAI {
         }
     }
 
-    // 获取所有生成的歌曲元数据
+    // 获取指定页数的请求ID
     async getAllSongs(index) {
         try {
-            const data = await this.getMetadata([], index - 1);
+            const data = await this.getMetadata(index);
             return data;
         } catch (e) {
             console.error(e);

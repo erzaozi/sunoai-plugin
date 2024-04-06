@@ -48,7 +48,9 @@ export class AllSongs extends plugin {
             let [, index] = e.msg.match(/第([0-9]+)页$/) || [, 1]
             index = Number(index)
 
-            const data = await suno.getAllSongs(index);
+            logger.info('获取第' + index + '页歌曲')
+
+            const data = await suno.getAllSongs(index - 1)
 
             const allSongsList = await Promise.all(
                 data.map(async (song, index) => {
@@ -63,20 +65,20 @@ export class AllSongs extends plugin {
             const base64 = await puppeteer.screenshot("sunoai-plugin", {
                 saveId: "AllSongs",
                 tplFile: `${pluginResources}/listTemp/listTemp.html`,
-                lable: '',
+                lable: '当前为第' + index + '页',
                 sidebar: `共检索到${data.length}首歌曲`,
                 pluginResources,
-                header: `SunoAI 全部歌曲第${index}页`,
+                header: 'SunoAI 全部歌曲',
                 List: allSongsList,
                 tab1: "歌曲名称",
                 tab2: "封面",
-                notice: '使用/suno全部歌曲第x页来查看指定页',
+                notice: '使用[#全部歌曲第x页]来查看对应页，使用[#查看歌曲+序号]查看歌曲详情',
             });
 
             e.reply(base64);
-
         } catch (err) {
             console.error(`获取歌曲失败: ${err}`);
         }
+        return true;
     }
 }
