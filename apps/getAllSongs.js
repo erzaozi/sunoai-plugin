@@ -32,12 +32,12 @@ export class AllSongs extends plugin {
 
             if (cookieList.length === 0) {
                 await e.reply('请先在配置文件中添加你的Cookie');
-                return;
+                return true;
             }
 
             if (!cookieList[useCookie]) {
                 await e.reply(`未能获取到你配置的第${useCookie + 1}个Cookie`);
-                return;
+                return true;
             }
 
             await e.reply('正在获取歌曲中，请稍后...');

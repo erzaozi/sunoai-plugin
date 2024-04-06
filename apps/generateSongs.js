@@ -42,27 +42,22 @@ export class GenerateSongs extends plugin {
 
         if (cookieList.length === 0) {
             await e.reply('请先在配置文件中添加你的Cookie');
-            return;
+            return true;
         }
 
         if (!cookieList[useCookie]) {
             await e.reply(`未能获取到你配置的第${useCookie + 1}个Cookie`);
-            return;
+            return true;
         }
 
-        await e.reply('您正在使用SunoAI进行AI作曲，请选择适合您的作曲方式：\n\n1.使用 GPT 生成歌词并生成带歌词的歌曲\n2.生成纯音乐(无歌词)歌曲\n3.使用自定义歌词生成歌曲\n\n请直接回复序号即可', true)
+        await e.reply('请选择适合您的作曲方式：\n\n1.自动生成模式，简单一句话生成\n2.自定义模式，需要提供完整信息\n\n请直接回复序号即可', true)
 
         userConfig[e.user_id] = {
             cookie: cookieList[useCookie],
             step: 'select_method'
         }
 
-        userTimer[e.user_id] = setTimeout(() => {
-            delete userConfig[e.user_id];
-            delete userTimer[e.user_id];
-            e.reply('您未继续操作，SunoAI作曲已退出', true);
-            return true
-        }, 60000);
+        await setupTimeout(e)
 
         return true
     }
@@ -77,7 +72,7 @@ export class GenerateSongs extends plugin {
         switch (step) {
             case 'select_method':
                 // 判断是否为正确的选择
-                if (!['1', '2', '3'].includes(e.msg)) {
+                if (!['1', '2'].includes(e.msg)) {
                     await e.reply('选择正确的作曲方式', true);
                     return true;
                 }
@@ -86,83 +81,163 @@ export class GenerateSongs extends plugin {
 
                 switch (e.msg) {
                     case '1':
-                        // 使用 GPT 生成歌词并生成带歌词的歌曲
+                        // 自动生成模式，简单一句话生成
                         payload = { gpt_description_prompt: "", mv: "chirp-v3-0", prompt: "", make_instrumental: false };
                         // 修改配置
                         userConfig[e.user_id].payload = payload;
-                        userConfig[e.user_id].step = 'input_prompt';
-                        await e.reply('请描述你想生成的歌曲的提示词，如：一首关于永远陪伴在你身边的蓝调歌曲', true);
+                        userConfig[e.user_id].step = 'custom_mode_false';
+                        await e.reply('请选择适合您的作曲类型：\n\n1.带歌词歌曲\n2.纯音乐（无歌词）\n\n请直接回复序号即可', true);
                         break;
 
                     case '2':
-                        // 生成纯音乐(无歌词)歌曲
-                        payload = { gpt_description_prompt: "", mv: "chirp-v3-0", prompt: "", make_instrumental: true };
+                        // 自定义模式，需要提供完整信息
+                        payload = { prompt: "", tags: "", mv: "chirp-v3-0", title: "", make_instrumental: false };
                         // 修改配置
                         userConfig[e.user_id].payload = payload;
-                        userConfig[e.user_id].step = 'input_prompt';
-                        await e.reply('请描述你想生成的歌曲的提示词，如：一首关于跳舞的放克风格纯音乐', true);
-                        break;
-
-                    case '3':
-                        // 使用自定义歌词生成歌曲
-                        payload = { prompt: "", tags: "", mv: "chirp-v3-0", title: "", make_instrumental: false, continue_clip_id: null, continue_at: null };
-                        // 修改配置
-                        userConfig[e.user_id].payload = payload;
-                        userConfig[e.user_id].step = 'input_title';
-                        await e.reply('请输入歌曲标题，如：我会自己上厕所', true);
+                        userConfig[e.user_id].step = 'custom_mode_true';
+                        await e.reply('请选择适合您的作曲类型：\n\n1.带歌词歌曲\n2.纯音乐（无歌词）\n\n请直接回复序号即可', true);
                         break;
                 }
 
-                clearTimeout(userTimer[e.user_id]);
-                userTimer[e.user_id] = setTimeout(() => {
-                    delete userConfig[e.user_id];
-                    delete userTimer[e.user_id];
-                    e.reply('您未继续操作，SunoAI作曲已退出', true);
-                    return true
-                }, 60000);
+                await setupTimeout(e)
 
                 break;
-            case 'input_prompt':
-                // 输入提示词
+            case 'custom_mode_false':
+                // 判断是否为正确的选择
+                if (!['1', '2'].includes(e.msg)) {
+                    await e.reply('选择正确的作曲类型', true);
+                    return true;
+                }
+
+                switch (e.msg) {
+                    case '1':
+                        // 带歌词歌曲
+                        userConfig[e.user_id].payload.make_instrumental = false;
+                        userConfig[e.user_id].step = 'input_description';
+                        await e.reply('请输入您的歌曲说明：\n\n描述您想要的音乐风格和主题（例如，“关于假期的原声流行音乐”）。使用流派和氛围，而不是特定的艺术家和歌曲。', true);
+                        break;
+
+                    case '2':
+                        // 纯音乐（无歌词）
+                        userConfig[e.user_id].payload.make_instrumental = true;
+                        userConfig[e.user_id].step = 'input_description';
+                        await e.reply('请输入您的歌曲说明：\n\n描述您想要的音乐风格和主题（例如，“关于假期的原声流行音乐”）。使用流派和氛围，而不是特定的艺术家和歌曲。', true);
+                        break;
+                }
+
+                await setupTimeout(e)
+
+                break;
+            case 'input_description':
+                // 输入描述
                 userConfig[e.user_id].payload.gpt_description_prompt = e.msg;
 
-                // 生成歌曲
-                const suno = new SunoAI(userConfig[e.user_id].cookie);
-                await suno.init();
+                // 开始生成
+                await e.reply('正在生成歌曲，请稍候...', true)
 
-                const songInfo = await suno.generateSongs(userConfig[e.user_id].payload);
+                logger.info(userConfig[e.user_id].payload)
 
-                logger.info(songInfo)
-            
+                delete userConfig[e.user_id];
+                clearTimeout(userTimer[e.user_id]);
+
+                return true
+            case 'custom_mode_true':
+                // 判断是否为正确的选择
+                if (!['1', '2'].includes(e.msg)) {
+                    await e.reply('选择正确的作曲类型', true);
+                    return true;
+                }
+
+                switch (e.msg) {
+                    case '1':
+                        // 带歌词歌曲
+                        userConfig[e.user_id].payload.make_instrumental = false;
+                        userConfig[e.user_id].step = 'input_title';
+                        await e.reply('请输入您的歌曲标题：', true);
+                        break;
+
+                    case '2':
+                        // 纯音乐（无歌词）
+                        userConfig[e.user_id].payload.make_instrumental = true;
+                        userConfig[e.user_id].step = 'input_title';
+                        await e.reply('请输入您的歌曲标题：', true);
+                        break;
+                }
+
+                await setupTimeout(e)
                 break;
             case 'input_title':
-                // 输入歌曲标题
+                // 输入标题
                 userConfig[e.user_id].payload.title = e.msg;
-
-                await e.reply('请输入歌曲标签，如：#流行 #治愈', true);
-
                 userConfig[e.user_id].step = 'input_tags';
-
-                userTimer[e.user_id] = setTimeout(() => {
-                    delete userConfig[e.user_id];
-                    delete userTimer[e.user_id];
-                    e.reply('您未继续操作，SunoAI作曲已退出', true);
-                }, 60000);
-                
+                await e.reply('请输入您的音乐风格：', true);
+                await setupTimeout(e)
                 break;
             case 'input_tags':
-                // 输入歌曲标签
+                // 输入音乐风格
                 userConfig[e.user_id].payload.tags = e.msg;
-                
-                // 生成歌曲
-                const suno2 = new SunoAI(userConfig[e.user_id].cookie);
-                await suno2.init();
+                // 判断是否为纯音乐
+                if (userConfig[e.user_id].payload.make_instrumental) {
 
-                const songInfo2 = await suno2.generateSongs(userConfig[e.user_id].payload);
+                    // 开始生成
+                    await e.reply('正在生成歌曲，请稍候...', true)
 
+                    logger.info(userConfig[e.user_id].payload)
 
+                    delete userConfig[e.user_id];
+                    clearTimeout(userTimer[e.user_id]);
+
+                    return true
+                }
+
+                userConfig[e.user_id].step = 'input_prompt';
+                await e.reply('请输入您的歌词内容：', true);
+                await setupTimeout(e)
+                break;
+            case 'input_prompt':
+                if (e.msg.startsWith('生成：')) {
+                    try {
+                        let prompt = e.msg.substring(3)
+                        const suno = new SunoAI(userConfig[e.user_id].cookie)
+                        await suno.init();
+                        userConfig[e.user_id].payload.prompt = (await suno.generateLyrics(prompt)).text
+                    } catch (error) {
+                        logger.error(error)
+                    }
+                } else {
+                    userConfig[e.user_id].payload.prompt = e.msg
+                }
+
+                // 开始生成
+                await e.reply('正在生成歌曲，请稍候...', true)
+
+                logger.info(userConfig[e.user_id].payload)
+
+                delete userConfig[e.user_id];
+                clearTimeout(userTimer[e.user_id]);
+
+                return true
+            default:
                 break;
         }
         return false
     }
+}
+
+
+async function generateMusic(payload, cookie) {
+    const suno = new SunoAI(cookie)
+    await suno.init();
+    const songInfo = await suno.generateSongs(payload)
+
+}
+
+async function setupTimeout(e) {
+    clearTimeout(userTimer[e.user_id]);
+    userTimer[e.user_id] = setTimeout(() => {
+        delete userConfig[e.user_id];
+        delete userTimer[e.user_id];
+        e.reply('您未继续操作，SunoAI作曲已退出', true);
+        return true;
+    }, 60000);
 }
