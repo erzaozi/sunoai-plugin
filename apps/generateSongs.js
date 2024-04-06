@@ -30,7 +30,8 @@ export class GenerateSongs extends plugin {
                     /** 命令正则匹配 */
                     reg: '',
                     /** 执行方法 */
-                    fnc: 'input'
+                    fnc: 'input',
+                    log: false
                 }
             ]
         })

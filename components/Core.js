@@ -145,7 +145,7 @@ class SunoAI {
     }
 
     // 获取指定歌曲的元数据
-    async getMetadata(ids) {
+    async getMetadata(ids = [], page = 0) {
         try {
             // 获取配置文件
             let config = await Config.getConfig()
@@ -156,37 +156,51 @@ class SunoAI {
             let params = {};
             if (ids && ids.length > 0) {
                 params.ids = ids.join(',');
+            } else {
+                params.page = page;
             }
 
-            while (true) {
-                const response = await this.axiosInstance.request({
-                    method: 'GET',
-                    url: `${baseUrl}/api/feed/`,
-                    params
-                });
+            // 查询的结果
+            let data = [];
 
-                let data = response?.data;
+            if (params.ids) {
+                while (true) {
+                    const response = await this.axiosInstance.request({
+                        method: 'GET',
+                        url: `${baseUrl}/api/feed/`,
+                        params
+                    });
 
-                if (data[0]?.audio_url && data[1]?.audio_url) {
-                    if (config.save_data.video) {
-                        if (data[0]?.video_url && data[1]?.video_url) {
+                    data = response?.data;
+
+                    if (data[0]?.audio_url && data[1]?.audio_url) {
+                        if (!config.save_data.video || data[0]?.video_url && data[1]?.video_url) {
                             return data;
                         }
                     } else {
-                        return data;
+                        if (retryTimes > maxRetryTimes) {
+                            throw new Error('生成歌曲失败');
+                        }
+                        else {
+                            console.log('正在重试...');
+                            await new Promise(resolve => setTimeout(resolve, 5000));
+                            retryTimes += 1;
+                        }
                     }
                 }
-                else {
-                    if (retryTimes > maxRetryTimes) {
-                        throw new Error('生成歌曲失败');
-                    }
-                    else {
-                        console.log('正在重试...');
-                        await new Promise(resolve => setTimeout(resolve, 5000));
-                        retryTimes += 1;
-                    }
-                }
+            } else {
+                const response = await Promise.all(Array.from({ length: 5 }).map(async () => {
+                    params.page++
+                    const response = await this.axiosInstance.request({
+                        method: 'GET',
+                        url: `${baseUrl}/api/feed/`,
+                        params
+                    })
+                    return response?.data
+                }))
+                return response.flat()
             }
+
         } catch (e) {
             console.error(e);
         }
@@ -298,7 +312,15 @@ class SunoAI {
     // 获取所有生成的歌曲元数据
     async getAllSongs() {
         try {
-            const data = await this.getMetadata();
+            let data = []
+            let length = 0
+            let index = 0
+            do {
+                const response = await this.getMetadata([], index)
+                length = response.length
+                data = [...data, ...response]
+                index += 5
+            } while (length === 100)
             return data;
         } catch (e) {
             console.error(e);

@@ -4,6 +4,7 @@ import Config from '../components/Config.js'
 import puppeteer from "../../../lib/puppeteer/puppeteer.js";
 import { pluginResources } from '../model/path.js';
 import axios from 'axios';
+import { all } from 'axios';
 
 export class AllSongs extends plugin {
     constructor() {
@@ -18,7 +19,7 @@ export class AllSongs extends plugin {
             rule: [
                 {
                     /** 命令正则匹配 */
-                    reg: '^(\/|#)(suno(ai)?)?全部歌曲$',
+                    reg: '^(\/|#)(suno(ai)?)?全部歌曲(第[0-9]+页)?$',
                     /** 执行方法 */
                     fnc: 'allsongs'
                 }
@@ -40,15 +41,18 @@ export class AllSongs extends plugin {
                 return;
             }
 
-            await e.reply('正在获取全部歌曲中，请稍后...');
+            await e.reply('正在获取歌曲中，请稍后...');
 
             const suno = new SunoAI(cookieList[useCookie])
             await suno.init();
 
             const data = await suno.getAllSongs();
 
+            let [, index] = e.msg.match(/第([0-9]+)页$/) || [, 1]
+            index = Number(index)
+
             const allSongsList = await Promise.all(
-                data.map(async (song, index) => {
+                data.slice((index - 1) * 100, index * 100).map(async (song, index) => {
                     const cover_base64 = await axios.get(song.image_url, {
                         responseType: 'arraybuffer'
                     })
@@ -63,7 +67,7 @@ export class AllSongs extends plugin {
                 lable: '',
                 sidebar: `共检索到${data.length}首歌曲`,
                 pluginResources,
-                header: 'SunoAI 全部歌曲',
+                header: `SunoAI 全部歌曲第${index}页`,
                 List: allSongsList,
                 tab1: "歌曲名称",
                 tab2: "封面",
@@ -71,6 +75,7 @@ export class AllSongs extends plugin {
             });
 
             e.reply(base64);
+
         } catch (err) {
             console.error(`获取歌曲失败: ${err}`);
         }
