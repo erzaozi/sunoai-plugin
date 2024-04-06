@@ -189,16 +189,12 @@ class SunoAI {
                     }
                 }
             } else {
-                const response = await Promise.all(Array.from({ length: 5 }).map(async () => {
-                    params.page++
-                    const response = await this.axiosInstance.request({
-                        method: 'GET',
-                        url: `${baseUrl}/api/feed/`,
-                        params
-                    })
-                    return response?.data
-                }))
-                return response.flat()
+                const response = await this.axiosInstance.request({
+                    method: 'GET',
+                    url: `${baseUrl}/api/feed/`,
+                    params
+                })
+                return response?.data
             }
 
         } catch (e) {
@@ -310,17 +306,9 @@ class SunoAI {
     }
 
     // 获取所有生成的歌曲元数据
-    async getAllSongs() {
+    async getAllSongs(index) {
         try {
-            let data = []
-            let length = 0
-            let index = 0
-            do {
-                const response = await this.getMetadata([], index)
-                length = response.length
-                data = [...data, ...response]
-                index += 5
-            } while (length === 100)
+            const data = await this.getMetadata([], index - 1);
             return data;
         } catch (e) {
             console.error(e);

@@ -4,7 +4,6 @@ import Config from '../components/Config.js'
 import puppeteer from "../../../lib/puppeteer/puppeteer.js";
 import { pluginResources } from '../model/path.js';
 import axios from 'axios';
-import { all } from 'axios';
 
 export class AllSongs extends plugin {
     constructor() {
@@ -46,13 +45,13 @@ export class AllSongs extends plugin {
             const suno = new SunoAI(cookieList[useCookie])
             await suno.init();
 
-            const data = await suno.getAllSongs();
-
             let [, index] = e.msg.match(/第([0-9]+)页$/) || [, 1]
             index = Number(index)
 
+            const data = await suno.getAllSongs(index);
+
             const allSongsList = await Promise.all(
-                data.slice((index - 1) * 100, index * 100).map(async (song, index) => {
+                data.map(async (song, index) => {
                     const cover_base64 = await axios.get(song.image_url, {
                         responseType: 'arraybuffer'
                     })
@@ -71,7 +70,7 @@ export class AllSongs extends plugin {
                 List: allSongsList,
                 tab1: "歌曲名称",
                 tab2: "封面",
-                notice: '',
+                notice: '使用/suno全部歌曲第x页来查看指定页',
             });
 
             e.reply(base64);
