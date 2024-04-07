@@ -213,6 +213,10 @@ class SunoAI {
 
             let outputDir = pluginResources + '/output'
 
+            if (!fs.existsSync(outputDir)) {
+                fs.mkdirSync(outputDir, { recursive: true });
+            }
+
             let filePath = {}
 
             for (let i = 0; i < songsInfo.length; i++) {
