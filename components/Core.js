@@ -182,7 +182,7 @@ class SunoAI {
                         throw new Error('生成歌曲失败');
                     }
                     else {
-                        logger.log('还未生成好...');
+                        logger.info('还未生成好...');
                         await new Promise(resolve => setTimeout(resolve, 5000));
                         retryTimes += 1;
                     }
