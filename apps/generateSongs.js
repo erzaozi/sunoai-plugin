@@ -267,14 +267,26 @@ async function sendFile(e, filePath) {
         switch (send_type) {
             case 'record':
                 // 发送语音
+                if (!fs.existsSync(filePath[songName].mp3Path)) {
+                    e.reply('文件不存在，请检查配置项是否开启保存音频功能', true);
+                    return true;
+                }
                 await e.reply(segment.record(filePath[songName].mp3Path));
                 break;
             case 'video':
                 // 发送视频
+                if (!fs.existsSync(filePath[songName].mp4Path)) {
+                    e.reply('文件不存在，请检查配置项是否开启保存视频功能', true);
+                    return true;
+                }
                 await e.reply(segment.video(filePath[songName].mp4Path));
                 break;
             case 'file':
                 // 发送文件
+                if (!fs.existsSync(filePath[songName].mp3Path)) {
+                    e.reply('文件不存在，请检查配置项是否开启保存音频功能', true);
+                    return true;
+                }
                 try {
                     const upload = e.isGroup ? e.group.sendFile ? await e.group.sendFile(filePath[songName].mp3Path) : await e.group.fs.upload(filePath[songName].mp3Path) : await e.friend.sendFile(filePath[songName].mp3Path)
                     let fileUrl = await e.group?.getFileUrl(upload.fid) || await e.friend.getFileUrl(upload)
