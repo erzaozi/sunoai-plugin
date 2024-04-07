@@ -85,7 +85,7 @@ class SunoAI {
             await this._renew();
         }
         catch (e) {
-            console.error(e);
+            logger.error(e);
             throw e;
         }
     }
@@ -106,7 +106,7 @@ class SunoAI {
             this.authUpdateTime = Date.now();
         }
         catch (e) {
-            console.error(e);
+            logger.error(e);
             throw e;
         }
     }
@@ -128,18 +128,18 @@ class SunoAI {
         try {
             const response = await this.axiosInstance.post(`${baseUrl}/api/generate/v2/`, payload);
             if (response.status !== 200) {
-                console.error(response.statusText);
+                logger.error(response.statusText);
                 throw new Error(`Error response ${response.status}`);
             }
 
             const responseBody = response.data;
             const songsMetaInfo = responseBody.clips;
             const requestIds = songsMetaInfo.map(info => info.id);
-            console.log(requestIds);
+            logger.info(requestIds);
 
             return requestIds;
         } catch (e) {
-            console.error(e);
+            logger.error(e);
             throw e;
         }
     }
@@ -182,14 +182,14 @@ class SunoAI {
                         throw new Error('生成歌曲失败');
                     }
                     else {
-                        console.log('正在重试...');
+                        logger.log('还未生成好...');
                         await new Promise(resolve => setTimeout(resolve, 5000));
                         retryTimes += 1;
                     }
                 }
             }
         } catch (e) {
-            console.error(e);
+            logger.error(e);
         }
     }
 
@@ -200,7 +200,7 @@ class SunoAI {
             const songsInfo = await this.getMetadata(requestIds);
             return songsInfo;
         } catch (e) {
-            console.error(e);
+            logger.error(e);
             throw e;
         }
     }
@@ -231,8 +231,6 @@ class SunoAI {
                 let image_large_url = songInfo.image_large_url;
                 let fileName = `${title.replace(/ /g, '_')}_${i}`;
 
-                console.log(`保存 ${fileName}`);
-
                 const jsonPath = path.join(outputDir, `${fileName}.json`);
                 const mp3Path = path.join(outputDir, `${fileName}.mp3`);
                 const mp4Path = path.join(outputDir, `${fileName}.mp4`);
@@ -249,12 +247,12 @@ class SunoAI {
 
                 if (config.metadata) {
                     fs.writeFileSync(jsonPath, JSON.stringify(songInfo, null, 2), 'utf-8');
-                    console.log("信息已下载");
+                    logger.info("信息已下载");
                 }
 
                 if (config.lyrics) {
                     fs.writeFileSync(lrcPath, `${title}\n\n${lyric}`, 'utf-8');
-                    console.log("歌词已下载");
+                    logger.info("歌词已下载");
                 }
 
                 if (config.cover) {
@@ -274,23 +272,36 @@ class SunoAI {
 
             return filePath;
         } catch (e) {
-            console.error(e);
+            logger.error(e);
             throw e;
         }
     }
 
-    // 下载文件的函数
     async downloadFile(url, filePath) {
-        const response = await axios.get(url, { responseType: 'stream' });
-        if (response.status !== 200) {
-            throw new Error(`无法下载文件: ${url}`);
+        try {
+            const response = await axios.get(url, { responseType: 'stream' });
+            
+            if (response.status === 200) {
+                const fileStream = fs.createWriteStream(filePath);
+                response.data.pipe(fileStream);
+                return new Promise((resolve, reject) => {
+                    fileStream.on('finish', resolve);
+                    fileStream.on('error', reject);
+                });
+            } else if (response.status === 403) {
+                logger.info('文件还未生成好，正在重试...');
+                return new Promise(resolve => setTimeout(resolve, 5000)).then(() => this.downloadFile(url, filePath));
+            } else {
+                throw new Error(`无法下载文件: ${url}`);
+            }
+        } catch (error) {
+            if (error.response && error.response.status === 403) {
+                logger.info('文件还未生成好，正在重试...');
+                return new Promise(resolve => setTimeout(resolve, 5000)).then(() => this.downloadFile(url, filePath));
+            } else {
+                throw error;
+            }
         }
-        const fileStream = fs.createWriteStream(filePath);
-        response.data.pipe(fileStream);
-        return new Promise((resolve, reject) => {
-            fileStream.on('finish', resolve);
-            fileStream.on('error', reject);
-        });
     }
 
     // 获取指定页数的请求ID
@@ -299,7 +310,7 @@ class SunoAI {
             const data = await this.getMetadata(index);
             return data;
         } catch (e) {
-            console.error(e);
+            logger.error(e);
             throw e;
         }
     }
@@ -323,12 +334,11 @@ class SunoAI {
                     return data;
                 }
                 else {
-                    // console.log('重试中...');
                     await new Promise(resolve => setTimeout(resolve, 300));
                 }
             }
         } catch (e) {
-            console.error(e);
+            logger.error(e);
             throw e;
         }
     }

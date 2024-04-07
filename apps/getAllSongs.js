@@ -77,7 +77,8 @@ export class AllSongs extends plugin {
 
             e.reply(base64);
         } catch (err) {
-            console.error(`获取歌曲失败: ${err}`);
+            logger.error(`获取歌曲失败: ${err}`);
+            e.reply('获取歌曲失败，检查控制台报错');
         }
         return true;
     }

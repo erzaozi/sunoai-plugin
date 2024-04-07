@@ -1,7 +1,7 @@
 import plugin from '../../../lib/plugins/plugin.js'
 import SunoAI from '../components/Core.js'
 import Config from '../components/Config.js'
-import { pluginResources } from '../model/path.js';
+import fs from 'fs'
 
 // 存储用户配置进度
 let userConfig = {};
@@ -231,6 +231,8 @@ async function generateMusic(e, payload, cookie) {
         await suno.init();
         const songInfo = await suno.generateSongs(payload)
 
+        await e.reply('生成歌曲成功，正在下载...', true)
+
         const filePath = await suno.saveSongs(songInfo);
 
         await sendFile(e, filePath)
@@ -252,8 +254,6 @@ async function setupTimeout(e) {
 
 async function sendFile(e, filePath) {
     const send_type = await Config.getConfig().send_type;
-
-    logger.info(filePath);
 
     const songNames = Object.keys(filePath);
 
