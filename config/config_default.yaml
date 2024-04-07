@@ -1,5 +1,5 @@
 cookie_pool: []
-use_cookie: 0
+use_cookie: 1
 save_data:
   metadata: true
   lyric: true

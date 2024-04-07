@@ -46,15 +46,15 @@ export class GenerateSongs extends plugin {
             return true;
         }
 
-        if (!cookieList[useCookie]) {
-            await e.reply(`未能获取到你配置的第${useCookie + 1}个Cookie`);
+        if (!cookieList[useCookie - 1]) {
+            await e.reply(`未能获取到你配置的第${useCookie}个Cookie`);
             return true;
         }
 
         await e.reply('请选择适合您的作曲方式：\n\n1.自动生成模式，简单一句话生成\n2.自定义模式，需要提供完整信息\n\n请直接回复序号即可', true)
 
         userConfig[e.user_id] = {
-            cookie: cookieList[useCookie],
+            cookie: cookieList[useCookie - 1],
             step: 'select_method'
         }
 

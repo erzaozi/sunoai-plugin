@@ -40,14 +40,14 @@ export class AllSongs extends plugin {
                 return true;
             }
 
-            if (!cookieList[useCookie]) {
-                await e.reply(`未能获取到你配置的第${useCookie + 1}个Cookie`);
+            if (!cookieList[useCookie - 1]) {
+                await e.reply(`未能获取到你配置的第${useCookie}个Cookie`);
                 return true;
             }
 
             await e.reply('正在获取歌曲中，请稍后...');
 
-            const suno = new SunoAI(cookieList[useCookie])
+            const suno = new SunoAI(cookieList[useCookie - 1])
             await suno.init();
 
             let [, index] = e.msg.match(/第([0-9]+)页$/) || [, 1]
@@ -97,8 +97,8 @@ export class AllSongs extends plugin {
                 return true;
             }
 
-            if (!cookieList[useCookie]) {
-                await e.reply(`未能获取到你配置的第${useCookie + 1}个Cookie`);
+            if (!cookieList[useCookie - 1]) {
+                await e.reply(`未能获取到你配置的第${useCookie}个Cookie`);
                 return true;
             }
 
@@ -109,7 +109,7 @@ export class AllSongs extends plugin {
             index = Number(index);
             logger.info('获取第' + index + '首歌曲');
 
-            const suno = new SunoAI(cookieList[useCookie])
+            const suno = new SunoAI(cookieList[useCookie - 1])
             await suno.init();
 
             const page = Math.floor(index / 20)
