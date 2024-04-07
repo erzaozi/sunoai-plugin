@@ -173,20 +173,18 @@ class SunoAI {
                     return data;
                 }
 
-                if (data[0]?.audio_url && data[1]?.audio_url) {
-                    if (!config.save_data.video || data[0]?.status === 'complete' && data[1]?.status === 'complete') {
-                        return data;
-                    }
-                } else {
-                    if (retryTimes > maxRetryTimes) {
-                        throw new Error('生成歌曲失败');
-                    }
-                    else {
-                        logger.info('还未生成好...');
-                        await new Promise(resolve => setTimeout(resolve, 5000));
-                        retryTimes += 1;
-                    }
+                if (data[0]?.status === 'complete' && data[1]?.status === 'complete') {
+                    return data;
                 }
+
+                if (retryTimes > maxRetryTimes) {
+                    throw new Error('生成歌曲失败');
+                } else {
+                    logger.info('还未生成好...');
+                    await new Promise(resolve => setTimeout(resolve, 5000));
+                    retryTimes += 1;
+                }
+
             }
         } catch (e) {
             logger.error(e);
@@ -211,7 +209,7 @@ class SunoAI {
             // 获取配置文件
             let config = await Config.getConfig().save_data
 
-            let outputDir = pluginResources + '/output'
+            let outputDir = pluginResources + '/output/' + Date.now()
 
             if (!fs.existsSync(outputDir)) {
                 fs.mkdirSync(outputDir, { recursive: true });
@@ -280,7 +278,7 @@ class SunoAI {
     async downloadFile(url, filePath) {
         try {
             const response = await axios.get(url, { responseType: 'stream' });
-            
+
             if (response.status === 200) {
                 const fileStream = fs.createWriteStream(filePath);
                 response.data.pipe(fileStream);
@@ -299,6 +297,7 @@ class SunoAI {
                 logger.info('文件还未生成好，正在重试...');
                 return new Promise(resolve => setTimeout(resolve, 5000)).then(() => this.downloadFile(url, filePath));
             } else {
+                logger.error(error);
                 throw error;
             }
         }
