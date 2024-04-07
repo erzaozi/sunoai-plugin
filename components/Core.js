@@ -174,7 +174,7 @@ class SunoAI {
                 }
 
                 if (data[0]?.audio_url && data[1]?.audio_url) {
-                    if (!config.save_data.video || data[0]?.video_url && data[1]?.video_url) {
+                    if (!config.save_data.video || data[0]?.status === 'complete' && data[1]?.status === 'complete') {
                         return data;
                     }
                 } else {
