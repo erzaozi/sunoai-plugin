@@ -120,6 +120,8 @@ export class AllSongs extends plugin {
             const songInfo = data[indexInPage]
             if (!songInfo) return e.reply('未找到相应的歌曲信息'), true;
 
+            await e.reply('正在获取歌曲《' + songInfo.title + '》，请稍后...');
+
             const filePath = await suno.saveSongs([songInfo])
             await sendFile(e, filePath)
             logger.info('歌曲已发送')
