@@ -31,6 +31,7 @@ export class GenerateSongs extends plugin {
                     reg: '',
                     /** 执行方法 */
                     fnc: 'input',
+                    /** 输出日志 */
                     log: false
                 }
             ]
@@ -137,8 +138,7 @@ export class GenerateSongs extends plugin {
 
                 logger.info(userConfig[e.user_id].payload)
 
-                delete userConfig[e.user_id];
-                clearTimeout(userTimer[e.user_id]);
+                await generateMusic(e, userConfig[e.user_id].payload, userConfig[e.user_id].cookie);
 
                 return true
             case 'custom_mode_true':
@@ -184,8 +184,7 @@ export class GenerateSongs extends plugin {
 
                     logger.info(userConfig[e.user_id].payload)
 
-                    delete userConfig[e.user_id];
-                    clearTimeout(userTimer[e.user_id]);
+                    await generateMusic(e, userConfig[e.user_id].payload, userConfig[e.user_id].cookie);
 
                     return true
                 }
@@ -213,8 +212,7 @@ export class GenerateSongs extends plugin {
 
                 logger.info(userConfig[e.user_id].payload)
 
-                delete userConfig[e.user_id];
-                clearTimeout(userTimer[e.user_id]);
+                await generateMusic(e, userConfig[e.user_id].payload, userConfig[e.user_id].cookie);
 
                 return true
             default:
@@ -225,11 +223,21 @@ export class GenerateSongs extends plugin {
 }
 
 
-async function generateMusic(payload, cookie) {
-    const suno = new SunoAI(cookie)
-    await suno.init();
-    const songInfo = await suno.generateSongs(payload)
+async function generateMusic(e, payload, cookie) {
+    try {
+        delete userConfig[e.user_id];
+        clearTimeout(userTimer[e.user_id]);
+        const suno = new SunoAI(cookie)
+        await suno.init();
+        const songInfo = await suno.generateSongs(payload)
 
+        const filePath = await suno.saveSongs(songInfo);
+
+        await sendFile(e, filePath)
+    } catch (error) {
+        logger.error(error)
+        await e.reply('生成失败，请检查控制台输出再试')
+    }
 }
 
 async function setupTimeout(e) {
@@ -240,4 +248,46 @@ async function setupTimeout(e) {
         e.reply('您未继续操作，SunoAI作曲已退出', true);
         return true;
     }, 60000);
+}
+
+async function sendFile(e, filePath) {
+
+    const send_type = await Config.getConfig().send_type
+
+    logger.info(filePath)
+
+    // 获取两首歌的文件名
+    const songNames = Object.keys(filePath);
+
+    // 遍历
+    songNames.forEach(async (songName) => {
+
+        await e.reply(`正在发送第${songNames.indexOf(songName) + 1}首歌曲，歌曲名称：《${songName}》`)
+
+        switch (send_type) {
+            case 'record':
+                // 发送语音
+                await e.reply(segment.record(filePath[songName].mp3Path));
+                break;
+            case 'video':
+                // 发送视频
+                await e.reply(segment.video(filePath[songName].mp4Path));
+                break;
+            case 'file':
+                // 发送文件
+                try {
+                    const upload = e.isGroup ? e.group.sendFile ? await e.group.sendFile(filePath[songName].mp3Path) : await e.group.fs.upload(filePath[songName].mp3Path) : await e.friend.sendFile(filePath[songName].mp3Path)
+                    let fileUrl = await e.group?.getFileUrl(upload.fid) || await e.friend.getFileUrl(upload)
+                    if (fileUrl) await e.reply(fileUrl)
+                    else await e.reply(JSON.stringify(upload))
+                } catch (err) {
+                    logger.error(err)
+                    e.reply('发送文件失败，请检查控制台输出再试')
+                }
+                break;
+            default:
+                break;
+        }
+    })
+    return true
 }

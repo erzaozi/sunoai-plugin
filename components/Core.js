@@ -213,6 +213,8 @@ class SunoAI {
 
             let outputDir = pluginResources + '/output'
 
+            let filePath = {}
+
             for (let i = 0; i < songsInfo.length; i++) {
                 let songInfo = songsInfo[i];
                 let title = songInfo.title;
@@ -229,6 +231,14 @@ class SunoAI {
                 const mp4Path = path.join(outputDir, `${fileName}.mp4`);
                 const lrcPath = path.join(outputDir, `${fileName}.lrc`);
                 const imagePath = path.join(outputDir, `${fileName}.png`);
+
+                filePath[fileName] = {
+                    jsonPath,
+                    mp3Path,
+                    mp4Path,
+                    lrcPath,
+                    imagePath
+                }
 
                 if (config.metadata) {
                     // 保存信息
@@ -290,6 +300,8 @@ class SunoAI {
                     console.log("视频已下载");
                 }
             }
+            
+            return filePath;
         } catch (e) {
             console.error(e);
             throw e;

@@ -6,5 +6,5 @@ save_data:
   cover: true
   audio: true
   video: false
-send_type: 0
+send_type: 'record'
 await_time: 60
