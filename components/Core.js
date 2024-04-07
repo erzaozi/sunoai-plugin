@@ -205,7 +205,7 @@ class SunoAI {
         }
     }
 
-    // 将生成的歌曲保存到指定目录
+    // 保存歌曲
     async saveSongs(songsInfo) {
         try {
             // 获取配置文件
@@ -218,6 +218,9 @@ class SunoAI {
             }
 
             let filePath = {}
+
+            // 创建所有的下载任务
+            let downloadTasks = [];
 
             for (let i = 0; i < songsInfo.length; i++) {
                 let songInfo = songsInfo[i];
@@ -245,71 +248,49 @@ class SunoAI {
                 }
 
                 if (config.metadata) {
-                    // 保存信息
                     fs.writeFileSync(jsonPath, JSON.stringify(songInfo, null, 2), 'utf-8');
                     console.log("信息已下载");
                 }
 
                 if (config.lyrics) {
-                    // 保存歌词
-                    // 等待处理！！！！！
                     fs.writeFileSync(lrcPath, `${title}\n\n${lyric}`, 'utf-8');
                     console.log("歌词已下载");
                 }
 
                 if (config.cover) {
-                    // 保存封面
-                    const imageResponse = await axios.get(image_large_url, { responseType: 'stream' });
-                    if (imageResponse.status !== 200) {
-                        throw new Error('无法下载封面');
-                    }
-                    const imageFileStream = fs.createWriteStream(imagePath);
-                    imageResponse.data.pipe(imageFileStream);
-                    await new Promise((resolve, reject) => {
-                        imageFileStream.on('finish', resolve);
-                        imageFileStream.on('error', reject);
-                    });
-                    console.log("封面已下载");
+                    downloadTasks.push(this.downloadFile(image_large_url, imagePath));
                 }
 
                 if (config.audio) {
-                    // 保存歌曲
-                    console.log("歌曲下载中...");
-                    const response = await axios.get(audio_url, { responseType: 'stream' });
-                    if (response.status !== 200) {
-                        throw new Error('无法下载歌曲');
-                    }
-                    const fileStream = fs.createWriteStream(mp3Path);
-                    response.data.pipe(fileStream);
-                    await new Promise((resolve, reject) => {
-                        fileStream.on('finish', resolve);
-                        fileStream.on('error', reject);
-                    });
-                    console.log("歌曲已下载");
+                    downloadTasks.push(this.downloadFile(audio_url, mp3Path));
                 }
 
                 if (config.video) {
-                    // 保存视频
-                    console.log("视频下载中...");
-                    const response = await axios.get(video_url, { responseType: 'stream' });
-                    if (response.status !== 200) {
-                        throw new Error('无法下载视频');
-                    }
-                    const fileStream = fs.createWriteStream(mp4Path);
-                    response.data.pipe(fileStream);
-                    await new Promise((resolve, reject) => {
-                        fileStream.on('finish', resolve);
-                        fileStream.on('error', reject);
-                    })
-                    console.log("视频已下载");
+                    downloadTasks.push(this.downloadFile(video_url, mp4Path));
                 }
             }
-            
+
+            await Promise.all(downloadTasks);
+
             return filePath;
         } catch (e) {
             console.error(e);
             throw e;
         }
+    }
+
+    // 下载文件的函数
+    async downloadFile(url, filePath) {
+        const response = await axios.get(url, { responseType: 'stream' });
+        if (response.status !== 200) {
+            throw new Error(`无法下载文件: ${url}`);
+        }
+        const fileStream = fs.createWriteStream(filePath);
+        response.data.pipe(fileStream);
+        return new Promise((resolve, reject) => {
+            fileStream.on('finish', resolve);
+            fileStream.on('error', reject);
+        });
     }
 
     // 获取指定页数的请求ID
