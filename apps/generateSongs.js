@@ -28,6 +28,12 @@ export class GenerateSongs extends plugin {
                 },
                 {
                     /** 命令正则匹配 */
+                    reg: '^(\/|#)(suno(ai)?)?取消作曲$',
+                    /** 执行方法 */
+                    fnc: 'cancel'
+                },
+                {
+                    /** 命令正则匹配 */
                     reg: '',
                     /** 执行方法 */
                     fnc: 'input',
@@ -60,6 +66,15 @@ export class GenerateSongs extends plugin {
 
         await setupTimeout(e)
 
+        return true
+    }
+
+    async cancel(e) {
+        if (userConfig[e.user_id]) {
+            delete userConfig[e.user_id];
+            clearTimeout(userTimer[e.user_id]);
+        }
+        await e.reply('已取消作曲', true);
         return true
     }
 
