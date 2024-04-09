@@ -107,8 +107,8 @@ export class AllSongs extends plugin {
             
             if (!/^\d+$/.test(index)) return e.reply('请输入正确的序号'), true;
 
-            index = Number(index);
             logger.info('获取第' + index + '首歌曲');
+            index = Number(index)--;
 
             const suno = new SunoAI(cookieList[useCookie - 1])
             await suno.init();
