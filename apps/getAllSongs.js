@@ -78,7 +78,7 @@ export class AllSongs extends plugin {
                 tab1: "歌曲名称",
                 tab2: "封面",
                 notice: '使用[#全部歌曲第x页]来查看对应页，使用[#查看歌曲+序号]查看歌曲详情',
-                index: (index-1)*20,
+                index: (index - 1) * 20,
             });
 
             e.reply(base64);
@@ -108,7 +108,7 @@ export class AllSongs extends plugin {
             if (!/^\d+$/.test(index)) return e.reply('请输入正确的序号'), true;
 
             logger.info('获取第' + index + '首歌曲');
-            index = Number(index)--;
+            index = index - 1
 
             const suno = new SunoAI(cookieList[useCookie - 1])
             await suno.init();
