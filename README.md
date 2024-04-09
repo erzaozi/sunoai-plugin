@@ -43,6 +43,8 @@ pnpm install --filter=sunoai-plugin
 
 ## 配置文件
 
+非常不建议手动修改配置文件，本插件已兼容 [Guoba-plugin](https://github.com/guoba-yunzai/guoba-plugin) ，请使用锅巴插件对配置项进行修改
+
 ```yaml
 # 支持配置多个Cookie
 cookie_pool:
