@@ -78,6 +78,7 @@ export class AllSongs extends plugin {
                 tab1: "歌曲名称",
                 tab2: "封面",
                 notice: '使用[#全部歌曲第x页]来查看对应页，使用[#查看歌曲+序号]查看歌曲详情',
+                index: (index-1)*20,
             });
 
             e.reply(base64);

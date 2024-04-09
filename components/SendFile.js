@@ -7,7 +7,7 @@ async function sendFile(e, filePath) {
     const songNames = Object.keys(filePath);
 
     for (const songName of songNames) {
-        await e.reply(`正在发送第${songNames.indexOf(songName) + 1}首歌曲，歌曲名称：《${songName}》`);
+        await e.reply(`正在发送第${songNames.indexOf(songName) + 1}首歌曲，歌曲名称：《${songName || 无题}》`);
 
         const checkFileExists = (path) => {
             if (!fs.existsSync(path)) {
@@ -22,6 +22,7 @@ async function sendFile(e, filePath) {
                 case 'record':
                     if (checkFileExists(filePath[songName].mp3Path)) {
                         await e.reply(segment.record(filePath[songName].mp3Path));
+                        await e.reply(Bot.makeForwardMsg(makeForwardMsg(filePath[songName].jsonPath)))
                     }
                     break;
                 case 'video':
@@ -48,6 +49,12 @@ async function sendFile(e, filePath) {
     }
 
     return true;
+}
+
+function makeForwardMsg(path) {
+    if (!fs.existsSync(path)) return ['当前歌曲未保存信息']
+    const songInfo = JSON.parse(fs.readFileSync(path), 'utf-8');
+    return [{ message: `曲风:${songInfo.metadata.tags}` }, { message: `歌词:\n${songInfo.metadata.prompt}` }]
 }
 
 export default sendFile;
