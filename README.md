@@ -36,12 +36,10 @@ pnpm install --filter=sunoai-plugin
 
 每个免费账号每天有5次生成次数，可以生成10首歌。可以先免费体验下，如果觉得好玩，在某些交易市场有20元一个月的共享账号
 
- 1. 打开 [SunoAI官网](https://app.suno.ai) 并登录，F12 打开控制台
- 2. 控制台输入以下代码即可复制Cookie：
+ 1. 打开 [SunoAI官网](https://app.suno.ai) 并登录，F12 打开控制台，点击 `网络`
+ 2. 刷新一遍网站，在筛选器中输入 `client`，然后找到下面任意一个请求，复制Cookie即可
     
-     ```JavaScript
-      copy(document.cookie)
-     ```
+    ![1](https://github.com/erzaozi/sunoai-plugin/assets/61369914/78737289-c349-4553-8438-db5abb88aaf1)
 
 ## 配置文件
 
