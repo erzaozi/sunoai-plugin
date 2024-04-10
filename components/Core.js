@@ -209,12 +209,6 @@ class SunoAI {
             // 获取配置文件
             let config = await Config.getConfig().save_data
 
-            let outputDir = pluginResources + '/output/' + Date.now()
-
-            if (!fs.existsSync(outputDir)) {
-                fs.mkdirSync(outputDir, { recursive: true });
-            }
-
             let filePath = {}
 
             // 创建所有的下载任务
@@ -228,6 +222,12 @@ class SunoAI {
                 let video_url = songInfo.video_url;
                 let image_large_url = songInfo.image_large_url;
                 let fileName = `${title.replace(/ /g, '_')}_${i}`;
+
+                let outputDir = pluginResources + '/output/' + songInfo.id
+
+                if (!fs.existsSync(outputDir)) {
+                    fs.mkdirSync(outputDir, { recursive: true });
+                }
 
                 const jsonPath = path.join(outputDir, `${fileName}.json`);
                 const mp3Path = path.join(outputDir, `${fileName}.mp3`);
@@ -243,25 +243,25 @@ class SunoAI {
                     imagePath
                 }
 
-                if (config.metadata) {
+                if (config.metadata && !fs.existsSync(jsonPath)) {
                     fs.writeFileSync(jsonPath, JSON.stringify(songInfo, null, 2), 'utf-8');
                     logger.info("信息已下载");
                 }
 
-                if (config.lyrics) {
+                if (config.lyrics && !fs.existsSync(lrcPath)) {
                     fs.writeFileSync(lrcPath, `${title}\n\n${lyric}`, 'utf-8');
                     logger.info("歌词已下载");
                 }
 
-                if (config.cover) {
+                if (config.cover && !fs.existsSync(imagePath)) {
                     downloadTasks.push(this.downloadFile(image_large_url, imagePath));
                 }
 
-                if (config.audio) {
+                if (config.audio && !fs.existsSync(mp3Path)) {
                     downloadTasks.push(this.downloadFile(audio_url, mp3Path));
                 }
 
-                if (config.video) {
+                if (config.video && !fs.existsSync(mp4Path)) {
                     downloadTasks.push(this.downloadFile(video_url, mp4Path));
                 }
             }
@@ -290,15 +290,16 @@ class SunoAI {
                 logger.info('文件还未生成好，正在重试...');
                 return new Promise(resolve => setTimeout(resolve, 5000)).then(() => this.downloadFile(url, filePath));
             } else {
-                throw new Error(`无法下载文件: ${url}`);
+                fs.unlinkSync(filePath);
+                throw new Error(`无法下载文件，状态码：${response.status}`);
             }
         } catch (error) {
             if (error.response && error.response.status === 403) {
                 logger.info('文件还未生成好，正在重试...');
                 return new Promise(resolve => setTimeout(resolve, 5000)).then(() => this.downloadFile(url, filePath));
             } else {
-                logger.error(error);
-                throw error;
+                fs.unlinkSync(filePath);
+                throw new Error('下载文件失败：' + error.message);
             }
         }
     }
