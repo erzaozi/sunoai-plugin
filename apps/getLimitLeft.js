@@ -35,19 +35,30 @@ export class LimitLeft extends plugin {
         let msg = `已配置${cookieList.length}个Cookie\n`;
         await e.reply('正在查询中，预计10s，请稍后...');
 
-        await Promise.all(cookieList.map(async (cookie) => {
-            const suno = new SunoAI(cookie);
-            await suno.init();
+        let promises = cookieList.map(async (cookie, index) => {
+            try {
+                const suno = new SunoAI(cookie);
+                await suno.init();
+                return await suno.getLimitLeft();
+            } catch (error) {
+                return `第 ${index + 1} 个Cookie获取状态失败，请检查Cookie是否有效`;
+            }
+        });
 
-            const { is_active, plan, renews_on, monthly_usage, monthly_limit, total_credits_left } = await suno.getLimitLeft();
+        let results = await Promise.all(promises);
 
-            msg += '\n';
-            msg += `┌ 订阅状态：${is_active ? '已订阅' : '未订阅'}\n`;
-            msg += `├ 订阅挡位：${plan ? plan.name : '试用版'}\n`;
-            msg += `├ 到期时间：${renews_on ? new Date(renews_on).toLocaleString() : '无'}\n`;
-            msg += `├ 点数使用：${monthly_usage}` + ' / ' + `${monthly_limit}\n`;
-            msg += `└ 剩余次数：${total_credits_left}（${total_credits_left / 10}次）\n`
-        }));
+        msg += results.map((result, index) => {
+            if (typeof result === 'string') {
+                return result;
+            } else {
+                let { is_active, plan, renews_on, monthly_usage, monthly_limit, total_credits_left } = result;
+                return `┌ 订阅状态：${is_active ? '已订阅' : '未订阅'}\n` +
+                    `├ 订阅挡位：${plan ? plan.name : '试用版'}\n` +
+                    `├ 到期时间：${renews_on ? new Date(renews_on).toLocaleString() : '无'}\n` +
+                    `├ 点数使用：${monthly_usage}` + ' / ' + `${monthly_limit}\n` +
+                    `└ 剩余次数：${total_credits_left}（${total_credits_left / 10}次）\n`;
+            }
+        }).join('\n');
 
         await e.reply(msg);
         return true
