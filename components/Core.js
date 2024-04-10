@@ -11,8 +11,10 @@ class SunoAI {
     constructor(cookie) {
         this.cookie = cookie;
         this.headers = {
-            "Accept-Encoding": "gzip, deflate, br",
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3",
+            "Content-Type": "text/plain;charset=UTF-8",
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
+            "Referer": "https://suno.com",
+            "Origin": "https://suno.com",
             "Cookie": cookie
         };
         this.sid = null;
@@ -66,8 +68,8 @@ class SunoAI {
         try {
             const response = await this.axiosInstance.request({
                 method: 'GET',
-                url: 'https://clerk.suno.ai/v1/client',
-                params: { _clerk_js_version: '4.70.5' },
+                url: 'https://clerk.suno.com/v1/client',
+                params: { _clerk_js_version: '4.72.0-snapshot.vc141245' },
                 headers: {
                     Cookie: this.cookie
                 }
@@ -95,7 +97,7 @@ class SunoAI {
         try {
             const tokenResponse = await this.axiosInstance.request({
                 method: 'POST',
-                url: `https://clerk.suno.ai/v1/client/sessions/${this.sid}/tokens/api?_clerk_js_version=4.70.5`,
+                url: `https://clerk.suno.com/v1/client/sessions/${this.sid}/tokens/api?_clerk_js_version=4.72.0-snapshot.vc141245`,
                 headers: {
                     Cookie: this.cookie
                 }
