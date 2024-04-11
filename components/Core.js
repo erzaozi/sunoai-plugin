@@ -86,9 +86,8 @@ class SunoAI {
             this.sid = sid;
             await this._renew();
         }
-        catch (e) {
-            logger.error(e);
-            throw e;
+        catch (error) {
+            throw error;
         }
     }
 
@@ -107,9 +106,8 @@ class SunoAI {
             this.headers.Authorization = `Bearer ${token}`;
             this.authUpdateTime = Date.now();
         }
-        catch (e) {
-            logger.error(e);
-            throw e;
+        catch (error) {
+            throw error;
         }
     }
     // 获取剩余的请求次数
@@ -140,9 +138,8 @@ class SunoAI {
             logger.info(requestIds);
 
             return requestIds;
-        } catch (e) {
-            logger.error(e);
-            throw e;
+        } catch (error) {
+            throw error;
         }
     }
 
@@ -188,8 +185,8 @@ class SunoAI {
                 }
 
             }
-        } catch (e) {
-            logger.error(e);
+        } catch (error) {
+            logger.error(error);
         }
     }
 
@@ -199,9 +196,8 @@ class SunoAI {
             const requestIds = await this.getRequestIds(payload);
             const songsInfo = await this.getMetadata(requestIds);
             return songsInfo;
-        } catch (e) {
-            logger.error(e);
-            throw e;
+        } catch (error) {
+            throw error;
         }
     }
 
@@ -281,7 +277,6 @@ class SunoAI {
 
             return filePath;
         } catch (error) {
-            logger.error(error);
             throw error;
         }
     }
@@ -324,9 +319,8 @@ class SunoAI {
         try {
             const data = await this.getMetadata(index);
             return data;
-        } catch (e) {
-            logger.error(e);
-            throw e;
+        } catch (error) {
+            throw error;
         }
     }
 
@@ -352,9 +346,8 @@ class SunoAI {
                     await new Promise(resolve => setTimeout(resolve, 300));
                 }
             }
-        } catch (e) {
-            logger.error(e);
-            throw e;
+        } catch (error) {
+            throw error;
         }
     }
 }
