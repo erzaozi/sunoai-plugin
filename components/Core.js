@@ -267,7 +267,7 @@ class SunoAI {
                     downloadTasks.push(this.downloadFile(video_url, mp4Path));
                 }
 
-                if (config.delete_files) {
+                if (config.del_file) {
                     setTimeout(() => {
                         if (fs.existsSync(outputDir)) {
                             fs.rmSync(outputDir, { recursive: true, force: true });
