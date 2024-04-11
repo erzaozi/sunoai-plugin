@@ -175,7 +175,7 @@ class SunoAI {
                     return data;
                 }
 
-                if (data[0]?.status === 'complete' && data[1]?.status === 'complete') {
+                if (data && data[0]?.status === 'complete' && data[1]?.status === 'complete') {
                     return data;
                 }
 
