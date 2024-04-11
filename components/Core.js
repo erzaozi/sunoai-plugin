@@ -58,7 +58,7 @@ class SunoAI {
                 else {
                     this.retryTime = 0;
                 }
-                return error.response;
+                return error.response ? error.response : Promise.reject(error);
             }
         );
     }
