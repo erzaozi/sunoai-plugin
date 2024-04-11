@@ -280,9 +280,9 @@ class SunoAI {
             await Promise.all(downloadTasks);
 
             return filePath;
-        } catch (e) {
-            logger.error(e);
-            throw e;
+        } catch (error) {
+            logger.error(error);
+            throw error;
         }
     }
 
@@ -301,7 +301,9 @@ class SunoAI {
                 logger.info('文件还未生成好，正在重试...');
                 return new Promise(resolve => setTimeout(resolve, 5000)).then(() => this.downloadFile(url, filePath));
             } else {
-                fs.unlinkSync(filePath);
+                if (fs.existsSync(filePath)) {
+                    fs.unlinkSync(filePath);
+                }
                 throw new Error(`无法下载文件，状态码：${response.status}`);
             }
         } catch (error) {
@@ -309,7 +311,9 @@ class SunoAI {
                 logger.info('文件还未生成好，正在重试...');
                 return new Promise(resolve => setTimeout(resolve, 5000)).then(() => this.downloadFile(url, filePath));
             } else {
-                fs.unlinkSync(filePath);
+                if (fs.existsSync(filePath)) {
+                    fs.unlinkSync(filePath);
+                }
                 throw new Error('下载文件失败：' + error.message);
             }
         }
