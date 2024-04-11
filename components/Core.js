@@ -7,6 +7,8 @@ import { pluginResources } from '../model/path.js';
 const baseUrl = 'https://studio-api.suno.ai';
 const maxRetryTimes = 5;
 
+let startUseCookie = null;
+
 class SunoAI {
     constructor(cookie) {
         this.cookie = cookie;
@@ -128,7 +130,23 @@ class SunoAI {
         try {
             const response = await this.axiosInstance.post(`${baseUrl}/api/generate/v2/`, payload);
             if (response.status !== 200) {
-                logger.error(response.statusText);
+                if (response.status === 402) {
+                    let config = await Config.getConfig()
+                    if (config.auto_next) {
+                        if (startUseCookie === null) {
+                            startUseCookie = config.use_cookie;
+                        } else if (config.use_cookie === startUseCookie) {
+                            startUseCookie = null;
+                            throw new Error('所有Cookie都已尝试，没有可用的Cookie了');
+                        }
+                        config.use_cookie = ((config.use_cookie + 1) % config.cookie_pool.length) + 1;
+                        let nextCookie = config.cookie_pool[config.use_cookie - 1]
+                        await Config.setConfig(config)
+                        logger.info('切换到第' + config.use_cookie + '个Cookie')
+                        await new SunoAI(nextCookie).init()
+                        return await this.getRequestIds(payload)
+                    }
+                }
                 throw new Error(`Error response ${response.status}`);
             }
 

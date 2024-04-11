@@ -8,4 +8,5 @@ save_data:
   video: false
 send_type: 'record'
 await_time: 60
+auto_next: false
 del_file: true
