@@ -1,7 +1,7 @@
 import plugin from '../../../lib/plugins/plugin.js'
 import SunoAI from '../components/Core.js'
+import Config from '../components/Config.js'
 import sendFile from '../components/SendFile.js';
-import cookieManager from '../components/Cookie.js';
 
 // 存储用户配置进度
 let userConfig = {};
@@ -45,27 +45,28 @@ export class GenerateSongs extends plugin {
     }
 
     async generatesongs(e) {
-        try {
-            let cookie = cookieManager.currentCookie
+        const { cookie_pool: cookieList, use_cookie: useCookie } = await Config.getConfig();
 
-            await e.reply('请选择适合您的作曲方式：\n\n1.自动生成模式，简单一句话生成\n2.自定义模式，需要提供完整信息\n\n请直接回复序号即可', true)
-
-            userConfig[e.user_id] = {
-                cookie: cookie,
-                step: 'select_method'
-            }
-
-            await setupTimeout(e)
-
-            return true
-        } catch (err) {
-            if (err.message === '当前已没有可用cookie') {
-                e.reply(err.message)
-            } else {
-                logger.error(`获取cookie失败: ${err}`);
-                e.reply('获取cookie失败，检查控制台报错');
-            }
+        if (cookieList.length === 0) {
+            await e.reply('请先在配置文件中添加你的Cookie');
+            return true;
         }
+
+        if (!cookieList[useCookie - 1]) {
+            await e.reply(`未能获取到你配置的第${useCookie}个Cookie`);
+            return true;
+        }
+
+        await e.reply('请选择适合您的作曲方式：\n\n1.自动生成模式，简单一句话生成\n2.自定义模式，需要提供完整信息\n\n请直接回复序号即可', true)
+
+        userConfig[e.user_id] = {
+            cookie: cookieList[useCookie - 1],
+            step: 'select_method'
+        }
+
+        await setupTimeout(e)
+
+        return true
     }
 
     async cancel(e) {
