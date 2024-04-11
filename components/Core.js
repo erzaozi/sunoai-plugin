@@ -139,7 +139,7 @@ class SunoAI {
                             startUseCookie = null;
                             throw new Error('所有Cookie都已尝试，没有可用的Cookie了');
                         }
-                        config.use_cookie = ((config.use_cookie + 1) % config.cookie_pool.length) + 1;
+                        config.use_cookie = ((config.use_cookie) % config.cookie_pool.length) + 1;
                         let nextCookie = config.cookie_pool[config.use_cookie - 1]
                         await Config.setConfig(config)
                         logger.info('切换到第' + config.use_cookie + '个Cookie')
