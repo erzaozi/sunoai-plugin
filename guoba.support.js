@@ -124,6 +124,12 @@ export function supportGuoba() {
           },
         },
         {
+          field: "del_file",
+          label: "删除文件",
+          bottomHelpMessage: "是否在生成后10分钟后删除文件",
+          component: "Switch",
+        },
+        {
           field: "await_time",
           label: "等待生成次数",
           bottomHelpMessage: "等待一次为5秒，不要设置太小导致无法使用",

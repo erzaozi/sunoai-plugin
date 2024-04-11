@@ -209,7 +209,7 @@ class SunoAI {
     async saveSongs(songsInfo) {
         try {
             // 获取配置文件
-            let config = await Config.getConfig().save_data
+            let config = await Config.getConfig()
 
             let filePath = {}
 
@@ -245,26 +245,35 @@ class SunoAI {
                     imagePath
                 }
 
-                if (config.metadata && !fs.existsSync(jsonPath)) {
+                if (config.save_data.metadata && !fs.existsSync(jsonPath)) {
                     fs.writeFileSync(jsonPath, JSON.stringify(songInfo, null, 2), 'utf-8');
                     logger.info("信息已下载");
                 }
 
-                if (config.lyrics && !fs.existsSync(lrcPath)) {
+                if (config.save_data.lyrics && !fs.existsSync(lrcPath)) {
                     fs.writeFileSync(lrcPath, `${title}\n\n${lyric}`, 'utf-8');
                     logger.info("歌词已下载");
                 }
 
-                if (config.cover && !fs.existsSync(imagePath)) {
+                if (config.save_data.cover && !fs.existsSync(imagePath)) {
                     downloadTasks.push(this.downloadFile(image_large_url, imagePath));
                 }
 
-                if (config.audio && !fs.existsSync(mp3Path)) {
+                if (config.save_data.audio && !fs.existsSync(mp3Path)) {
                     downloadTasks.push(this.downloadFile(audio_url, mp3Path));
                 }
 
-                if (config.video && !fs.existsSync(mp4Path)) {
+                if (config.save_data.video && !fs.existsSync(mp4Path)) {
                     downloadTasks.push(this.downloadFile(video_url, mp4Path));
+                }
+
+                if (config.delete_files) {
+                    setTimeout(() => {
+                        if (fs.existsSync(outputDir)) {
+                            fs.rmSync(outputDir, { recursive: true, force: true });
+                            logger.info("定时清理文件夹");
+                        }
+                    }, 1000 * 60 * 10);
                 }
             }
 
