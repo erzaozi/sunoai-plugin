@@ -65,6 +65,12 @@ export function supportGuoba() {
           },
         },
         {
+          field: "auto_next",
+          label: "自动切换账号",
+          bottomHelpMessage: "是否在无余额时自动切换Cookie",
+          component: "Switch",
+        },
+        {
           component: "Divider",
           label: "💾存储",
           componentProps: {
