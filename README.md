@@ -1,96 +1,82 @@
-<div align="center">
+![sunoai-plugin](https://socialify.git.ci/erzaozi/sunoai-plugin/image?description=1&font=Raleway&forks=1&issues=1&language=1&name=1&owner=1&pattern=Circuit%20Board&pulls=1&stargazers=1&theme=Auto)
 
-# SUNOAI-PLUGIN
+<img decoding="async" align=right src="resources/readme/girl.png" width="35%">
 
-</div>
+# SUNOAI-PLUGIN 🍮
 
-<span id="header"></span>
+- 一个适用于 [Yunzai 系列机器人框架](https://github.com/yhArcadia/Yunzai-Bot-plugins-index) 的的 AI 音乐生成插件，让你在输入框中拥有便捷的AI音乐创作体验
 
-<p align="center">
-  <img src="https://img.shields.io/badge/Nodejs-18.x+-6BA552.svg" alt="Nodejs">
-  <img src="https://img.shields.io/badge/Yunzai_Bot-v3-red.svg" alt="NoneBot">
-  <br>
-  </a>
-    <a href="https://qm.qq.com/q/RnQteOmD84">
-    <img src="https://img.shields.io/badge/QQ%E7%BE%A4-%E7%8C%AB%E5%A8%98%E4%B9%90%E5%9B%AD-pink?style=flat-square" alt="QQ Chat Group">
-  </a>
-</p>
+- 使用强大的的 [SUNOAI](https://suno.com) 音乐创作模型，支持多并发生成，能够**免费**体验！支持**付费**使用！交互式生成，支持多种语言，可生成超多种风格的高质量音乐。
 
-## 简介
+- **使用中遇到问题请加QQ群咨询：[707331865](https://qm.qq.com/q/TXTIS9KhO2)**
 
-SunoAI-Plugin 是一款在 QQ 内快速调用 [SunoAI](https://www.suno.ai/) 最新 [SunoAI V3] 模型进行多参数便捷 AI 作曲的 [Yunzai-Bot](https://github.com/Le-niao/Yunzai-Bot) 插件，如果你喜欢这个项目，请不妨点个 Star🌟，这是对开发者最大的动力
+> [!TIP]
+> 在AI音乐合成超火的当下，我与 [CikeyQi](https://github.com/CikeyQi)一拍即合决定开发这个插件，不仅仅是为了朋友们对AI音乐生成的喜爱，更是为了让更多人能够**创作**出**自己**的音乐，这个插件比你想得更有趣！
 
-## 安装
+## 安装插件
 
-- 克隆本仓库至 plugins 目录
+#### 1. 克隆仓库
+
 ```
 git clone https://github.com/erzaozi/sunoai-plugin.git ./plugins/sunoai-plugin
 ```
 
-- 安装依赖
+> [!NOTE]
+> 如果你的网络环境较差，无法连接到Github，可以使用 [GitHub Proxy](https://mirror.ghproxy.com/) 提供的文件代理加速下载服务
+> ```
+> git clone https://mirror.ghproxy.com/https://github.com/erzaozi/sunoai-plugin.git ./plugins/sunoai-plugin
+> ```
+
+#### 2. 安装依赖
+
 ```
 pnpm install --filter=sunoai-plugin
 ```
 
-## 获取 Cookie
+## 插件配置
 
+> [!WARNING]
+> 非常不建议手动修改配置文件，本插件已兼容 [Guoba-plugin](https://github.com/guoba-yunzai/guoba-plugin) ，请使用锅巴插件对配置项进行修改
+
+<details> <summary>获取 Cookie</summary>
+
+  1. 打开 [SunoAI官网](https://app.suno.ai) 并登录，F12 打开控制台，点击 `网络`
+  2. 请先刷新一遍网站，在筛选器中输入 `client?_clerk_js_version`，然后找到下面任意一个请求，复制Cookie即可
+    
+  ![1](https://github.com/erzaozi/sunoai-plugin/assets/61369914/78737289-c349-4553-8438-db5abb88aaf1)
 > [!TIP]
 > 每个免费账号每天有5次生成次数，可以生成10首歌。可以先免费体验下，如果觉得好玩，~~在某些交易市场有20元一个月的共享账号~~（注册多个账号可以无限畅玩，插件已支持多账户自动无感切换）
 
- 1. 打开 [SunoAI官网](https://app.suno.ai) 并登录，F12 打开控制台，点击 `网络`
- 2. 请先刷新一遍网站，在筛选器中输入 `client?_clerk_js_version`，然后找到下面任意一个请求，复制Cookie即可
-    
-    ![1](https://github.com/erzaozi/sunoai-plugin/assets/61369914/78737289-c349-4553-8438-db5abb88aaf1)
+- </details>
 
-## 配置文件
+## 功能列表
 
-非常不建议手动修改配置文件，本插件已兼容 [Guoba-plugin](https://github.com/guoba-yunzai/guoba-plugin) ，请使用锅巴插件对配置项进行修改
+请使用 `#mj帮助` 获取完整帮助
 
-```yaml
-# 支持配置多个Cookie
-cookie_pool:
-  - please_paste_your_cookie_1_here
-  - please_paste_your_cookie_2_here
-# 使用的Cookie，从1开始
-use_cookie: 1
-# 保存文件到本地
-save_data:
-  metadata: true
-  lyric: true
-  cover: true
-  audio: true
-  video: false
-# 发送类型，record为语音，video为视频，file为mp3文件
-send_type: 'record'
-# 等待次数，一次为5秒，请不要调过低导致任务失败
-await_time: 60
-```
+- [x] 随机生成
+- [x] 纯音乐生成
+- [x] 自定义歌词生成
+- [x] 查看多账户余额
+- [x] 账户无感切换
+- [x] 获取历史生成记录
 
-## 功能详解
+## 常见问题
+1. 获取session会话失败
+   + ~~sunoai官网间歇性出现该问题~~
 
-**如果使用过程中出现问题可以加群 `551081559` 反馈问题**
+## 支持与贡献
 
-| 命令 | 功能 | 说明 |
-| :---: | :---: | :---: |
-| #suno作曲 | 生成歌曲 | 请按照接下来的提示操作 |
-| #取消作曲 | 取消生成歌曲 | 立即停止作曲操作 |
-| #全部歌曲 | 获取生成好的音乐列表 | 可以用 `#获取全部歌曲第x页` 翻页 |
-| #查看歌曲 | 发送上一次生成好的音乐文件 | 可以用 `#查看歌曲+序号` 获取历史歌曲 |
-| #账号状态 | 查询所有Cookie状态 | —— |
+如果你喜欢这个项目，请不妨点个 Star🌟，这是对开发者最大的动力， 当然，你可以对我 [爱发电](https://afdian.net/a/sumoqi) 赞助，呜咪~❤️
 
-## 效果展示
-<details>
-<summary>放个《我会自己上厕所》镇楼</summary>
+有意见或者建议也欢迎提交 [Issues](https://github.com/erzaozi/sunoai-plugin/issues) 和 [Pull requests](https://github.com/erzaozi/sunoai-plugin/pulls)。
 
-https://github.com/erzaozi/sunoai-plugin/assets/61369914/491df3f9-4158-4f25-8a82-7141a93e6cfd
-
-</details>
-
-## 声明
-
-此项目仅用于学习交流，请勿用于非法用途
+## 相关项目
+* [suno-ai](https://github.com/hissincn/suno-ai)：Creat high quality songs from suno.ai by Javascript API.
 
 ## 致谢
-[SunoAI](https://www.suno.ai/)：Suno is building a future where anyone can make great music.\
-[suno-ai](https://github.com/hissincn/suno-ai)：Creat high quality songs from suno.ai by Javascript API.
+* [SunoAI](https://www.suno.ai/)：Suno is building a future where anyone can make great music.
+
+## 许可证
+本项目使用 [GNU AGPLv3](https://choosealicense.com/licenses/agpl-3.0/) 作为开源许可证。
+
 
