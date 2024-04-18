@@ -4,9 +4,9 @@
 
 # SUNOAI-PLUGIN 🍮
 
-- 一个适用于 [Yunzai 系列机器人框架](https://github.com/yhArcadia/Yunzai-Bot-plugins-index) 的的 AI 音乐生成插件，让你在输入框中拥有便捷的AI音乐创作体验
+- 一个适用于 [Yunzai 系列机器人框架](https://github.com/yhArcadia/Yunzai-Bot-plugins-index) 的 AI 音乐生成插件，让你在输入框中拥有便捷的AI音乐创作体验
 
-- 使用强大的的 [SUNOAI](https://suno.com) 音乐创作模型，支持多并发生成，能够**免费**体验！支持**付费**使用！交互式生成，支持多种语言，可生成超多种风格的高质量音乐。
+- 使用强大的 [SUNOAI](https://suno.com) 音乐创作模型，支持多并发生成，能够**免费**体验！支持**付费**使用！交互式生成，支持多种语言，可生成超多种风格的高质量音乐。
 
 - **使用中遇到问题请加QQ群咨询：[707331865](https://qm.qq.com/q/TXTIS9KhO2)**
 
@@ -73,9 +73,6 @@ pnpm install --filter=sunoai-plugin
 
 ## 相关项目
 * [suno-ai](https://github.com/hissincn/suno-ai)：Creat high quality songs from suno.ai by Javascript API.
-
-## 致谢
-* [SunoAI](https://www.suno.ai/)：Suno is building a future where anyone can make great music.
 
 ## 许可证
 本项目使用 [GNU AGPLv3](https://choosealicense.com/licenses/agpl-3.0/) 作为开源许可证。
