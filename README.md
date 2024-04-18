@@ -11,7 +11,7 @@
 - **使用中遇到问题请加QQ群咨询：[707331865](https://qm.qq.com/q/TXTIS9KhO2)**
 
 > [!TIP]
-> 在AI音乐合成超火的当下，我与 [CikeyQi](https://github.com/CikeyQi)一拍即合决定开发这个插件，不仅仅是为了朋友们对AI音乐生成的喜爱，更是为了让更多人能够**创作**出**自己**的音乐，这个插件比你想得更有趣！
+> 在AI音乐合成超火的当下，我与 [CikeyQi](https://github.com/CikeyQi) 一拍即合决定开发这个插件，不仅仅是为了朋友们对AI音乐生成的喜爱，更是为了让更多人能够**创作**出**自己**的音乐，这个插件比你想得更有趣！
 
 ## 安装插件
 
@@ -38,6 +38,9 @@ pnpm install --filter=sunoai-plugin
 > [!WARNING]
 > 非常不建议手动修改配置文件，本插件已兼容 [Guoba-plugin](https://github.com/guoba-yunzai/guoba-plugin) ，请使用锅巴插件对配置项进行修改
 
+> [!TIP]
+> 每个免费账号每天有5次生成次数，可以生成10首歌。可以先免费体验下，如果觉得好玩，~~在某些交易市场有20元一个月的共享账号~~（注册多个账号可以无限畅玩，插件已支持多账户自动无感切换）
+
 <details> <summary>获取 Cookie</summary>
 
   1. 打开 [SunoAI官网](https://app.suno.ai) 并登录，F12 打开控制台，点击 `网络`
@@ -45,10 +48,7 @@ pnpm install --filter=sunoai-plugin
     
   ![1](https://github.com/erzaozi/sunoai-plugin/assets/61369914/78737289-c349-4553-8438-db5abb88aaf1)
 
-- </details>
-
-> [!TIP]
-> 每个免费账号每天有5次生成次数，可以生成10首歌。可以先免费体验下，如果觉得好玩，~~在某些交易市场有20元一个月的共享账号~~（注册多个账号可以无限畅玩，插件已支持多账户自动无感切换）
+</details>
 
 ## 功能列表
 
@@ -63,7 +63,8 @@ pnpm install --filter=sunoai-plugin
 
 ## 常见问题
 1. 获取session会话失败
-   + ~~sunoai官网间歇性出现该问题~~
+   + 检查你的 Cookie 是否正确或过期
+   + ~~Sunoai官网不稳定，间歇性出现该问题~~
 
 ## 支持与贡献
 
