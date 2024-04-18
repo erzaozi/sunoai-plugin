@@ -52,7 +52,7 @@ pnpm install --filter=sunoai-plugin
 
 ## 功能列表
 
-请使用 `#mj帮助` 获取完整帮助
+请使用 `#作曲` 开始生成你想要的歌曲
 
 - [x] 随机生成
 - [x] 纯音乐生成
