@@ -44,7 +44,7 @@ pnpm install --filter=sunoai-plugin
 
 <details> <summary>获取 Cookie</summary>
 
-1. 打开 [SunoAI 官网](https://app.suno.ai) 并登录，F12 打开控制台，点击 `网络`
+1. 打开 [SunoAI 官网](https://suno.com/) 并登录，F12 打开控制台，点击 `网络`
 2. 请先刷新一遍网站，在筛选器中输入 `client?_clerk_js_version`，然后找到下面任意一个请求，复制 Cookie 即可
 
 ![1](https://github.com/erzaozi/sunoai-plugin/assets/61369914/78737289-c349-4553-8438-db5abb88aaf1)
