@@ -10,3 +10,7 @@ send_type: 'record'
 await_time: 60
 auto_next: false
 del_file: true
+proxy:
+  enable: false
+  host: 127.0.0.1
+  port: "7890"

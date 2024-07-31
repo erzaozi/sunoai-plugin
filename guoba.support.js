@@ -118,6 +118,33 @@ export function supportGuoba() {
           }
         },
         {
+          field: "proxy.enable",
+          label: "启用代理",
+          bottomHelpMessage: "代理开关",
+          component: "Switch",
+        },
+        {
+          field: "proxy.host",
+          label: "代理地址",
+          bottomHelpMessage: "代理服务器地址",
+          component: "Input",
+          componentProps: {
+            placeholder: '请输入代理地址',
+          },
+        },
+        {
+          field: "proxy.port",
+          label: "代理端口",
+          bottomHelpMessage: "代理服务器端口",
+          component: "InputNumber",
+          componentProps: {
+            placeholder: '请输入代理端口',
+            min: 1,
+            max: 65535,
+            step: 1,
+          },
+        },
+        {
           field: "send_type",
           label: "发送方式",
           bottomHelpMessage: "选择发送方式",

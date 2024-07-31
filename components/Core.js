@@ -65,22 +65,32 @@ class SunoAI {
         );
     }
 
+    get proxy() {
+        const proxyConfig = Config.getConfig().proxy
+        return proxyConfig.enable ? {
+            protocol: "http",
+            host: proxyConfig.host,
+            port: proxyConfig.port
+        } : null
+    }
+
     // 初始化 SunoAI 实例，必须在使用其他方法之前调用
     async init() {
         try {
             const response = await this.axiosInstance.request({
                 method: 'GET',
                 url: 'https://clerk.suno.com/v1/client',
-                params: { _clerk_js_version: '4.72.0-snapshot.vc141245' },
+                params: { _clerk_js_version: '4.73.4' },
                 headers: {
                     Cookie: this.cookie
-                }
+                },
+                proxy: this.proxy
             })
             const data = response.data;
             const r = data.response;
             let sid;
             if (r) {
-                sid = r.last_active_session_id;
+                sid = r.last_active_session_id || r.sessions?.[0].id;
             }
             if (!sid) {
                 throw new Error('无法获取会话ID');
@@ -98,10 +108,11 @@ class SunoAI {
         try {
             const tokenResponse = await this.axiosInstance.request({
                 method: 'POST',
-                url: `https://clerk.suno.com/v1/client/sessions/${this.sid}/tokens/api?_clerk_js_version=4.72.0-snapshot.vc141245`,
+                url: `https://clerk.suno.com/v1/client/sessions/${this.sid}/tokens/api?_clerk_js_version=4.73.4`,
                 headers: {
                     Cookie: this.cookie
-                }
+                },
+                proxy: this.proxy
             })
             const tokenData = tokenResponse.data;
             const token = tokenData?.jwt;
@@ -116,7 +127,8 @@ class SunoAI {
     async getLimitLeft() {
         const response = await this.axiosInstance.request({
             method: 'GET',
-            url: `${baseUrl}/api/billing/info/`
+            url: `${baseUrl}/api/billing/info/`,
+            proxy: this.proxy
         })
         const data = response.data;
         return data;
@@ -128,7 +140,11 @@ class SunoAI {
             throw new Error('需要有效参数');
         }
         try {
-            const response = await this.axiosInstance.post(`${baseUrl}/api/generate/v2/`, payload);
+            const response = await this.axiosInstance.post(`${baseUrl}/api/generate/v2/`,
+                payload,
+                {
+                    proxy: this.proxy
+                });
             if (response.status !== 200) {
                 if (response.status === 402) {
                     let config = await Config.getConfig()
@@ -181,7 +197,9 @@ class SunoAI {
                 const response = await this.axiosInstance.request({
                     method: 'GET',
                     url: `${baseUrl}/api/feed/`,
-                    params
+                    params,
+
+                    proxy: this.proxy
                 });
 
                 let data = response?.data;
@@ -348,13 +366,15 @@ class SunoAI {
             const requestId = await this.axiosInstance.request({
                 method: 'POST',
                 url: `${baseUrl}/api/generate/lyrics/`,
-                data: { prompt }
+                data: { prompt },
+                proxy: this.proxy
             })
             let id = requestId?.data?.id;
             while (true) {
                 const response = await this.axiosInstance.request({
                     method: 'GET',
                     url: `${baseUrl}/api/generate/lyrics/${id}`,
+                    proxy: this.proxy
                 })
                 let data = response?.data;
                 if (data?.status === 'complete') {
