@@ -1,6 +1,6 @@
 {
   "name": "sunoai-plugin",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Yunzai-Bot的AI作曲插件",
   "main": "index.js",
   "scripts": {

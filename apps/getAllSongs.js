@@ -31,6 +31,15 @@ export class AllSongs extends plugin {
         })
     }
 
+    get proxy() {
+        const proxyConfig = Config.getConfig().proxy
+        return proxyConfig.enable ? {
+            protocol: "http",
+            host: proxyConfig.host,
+            port: proxyConfig.port
+        } : null
+    }
+
     async allsongs(e) {
         try {
             const { cookie_pool: cookieList, use_cookie: useCookie } = await Config.getConfig();
@@ -60,7 +69,8 @@ export class AllSongs extends plugin {
             const allSongsList = await Promise.all(
                 data.map(async (song, index) => {
                     const cover_base64 = await axios.get(song.image_url, {
-                        responseType: 'arraybuffer'
+                        responseType: 'arraybuffer',
+                        proxy: this.proxy
                     })
                         .then(res => Buffer.from(res.data, 'binary').toString('base64'));
                     return { key: song.title || '无题', value: cover_base64 };
@@ -104,7 +114,7 @@ export class AllSongs extends plugin {
             }
 
             let [, index] = e.msg.match(/查看歌曲(.*)$/) || [, 1]
-            
+
             if (!/^\d+$/.test(index)) return e.reply('请输入正确的序号'), true;
 
             logger.info('获取第' + index + '首歌曲');

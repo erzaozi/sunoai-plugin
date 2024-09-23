@@ -198,7 +198,6 @@ class SunoAI {
                     method: 'GET',
                     url: `${baseUrl}/api/feed/`,
                     params,
-
                     proxy: this.proxy
                 });
 
@@ -319,7 +318,7 @@ class SunoAI {
 
     async downloadFile(url, filePath) {
         try {
-            const response = await axios.get(url, { responseType: 'stream' });
+            const response = await axios.get(url, { responseType: 'stream', proxy: this.proxy });
 
             if (response.status === 200) {
                 const fileStream = fs.createWriteStream(filePath);
