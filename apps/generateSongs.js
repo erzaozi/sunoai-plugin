@@ -98,7 +98,7 @@ export class GenerateSongs extends plugin {
                 switch (e.msg) {
                     case '1':
                         // 自动生成模式，简单一句话生成
-                        payload = { gpt_description_prompt: "", mv: "chirp-v3-5", prompt: "", make_instrumental: false };
+                        payload = { gpt_description_prompt: "", prompt: "", make_instrumental: false };
                         // 修改配置
                         userConfig[e.user_id].payload = payload;
                         userConfig[e.user_id].step = 'custom_mode_false';
@@ -107,7 +107,7 @@ export class GenerateSongs extends plugin {
 
                     case '2':
                         // 自定义模式，需要提供完整信息
-                        payload = { prompt: "", tags: "", mv: "chirp-v3-5", title: "", make_instrumental: false };
+                        payload = { prompt: "", tags: "", title: "", make_instrumental: false };
                         // 修改配置
                         userConfig[e.user_id].payload = payload;
                         userConfig[e.user_id].step = 'custom_mode_true';
@@ -203,6 +203,14 @@ export class GenerateSongs extends plugin {
 
                     return true
                 }
+
+                userConfig[e.user_id].step = 'input_ntags';
+                await e.reply('请输入不想要的音乐风格：', true);
+                await setupTimeout(e)
+                break;
+            case 'input_ntags':
+                // 输入不想要的音乐风格
+                userConfig[e.user_id].payload.negative_tags = e.msg;
 
                 userConfig[e.user_id].step = 'input_prompt';
                 await e.reply('请输入您的歌词内容：', true);

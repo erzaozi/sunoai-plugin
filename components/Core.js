@@ -4,7 +4,7 @@ import path from 'path';
 import Config from './Config.js';
 import { pluginResources } from '../model/path.js';
 
-const baseUrl = 'https://studio-api.suno.ai';
+const baseUrl = 'https://studio-api.prod.suno.com';
 const maxRetryTimes = 5;
 
 let startUseCookie = null;
@@ -80,7 +80,7 @@ class SunoAI {
             const response = await this.axiosInstance.request({
                 method: 'GET',
                 url: 'https://clerk.suno.com/v1/client',
-                params: { _clerk_js_version: '4.73.4' },
+                params: { _clerk_js_version: '5.34.3' },
                 headers: {
                     Cookie: this.cookie
                 },
@@ -108,7 +108,7 @@ class SunoAI {
         try {
             const tokenResponse = await this.axiosInstance.request({
                 method: 'POST',
-                url: `https://clerk.suno.com/v1/client/sessions/${this.sid}/tokens/api?_clerk_js_version=4.73.4`,
+                url: `https://clerk.suno.com/v1/client/sessions/${this.sid}/tokens/api?_clerk_js_version=5.34.3`,
                 headers: {
                     Cookie: this.cookie
                 },
@@ -139,6 +139,7 @@ class SunoAI {
         if (!payload) {
             throw new Error('需要有效参数');
         }
+        payload['mv'] = Config.getConfig().mv
         try {
             const response = await this.axiosInstance.post(`${baseUrl}/api/generate/v2/`,
                 payload,

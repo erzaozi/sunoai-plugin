@@ -72,6 +72,20 @@ export function supportGuoba() {
           component: "Switch",
         },
         {
+          field: "mv",
+          label: "使用模型",
+          bottomHelpMessage: "选择使用的模型",
+          component: "Select",
+          componentProps: {
+            options: [
+              { label: "v4", value: "chirp-v4" },
+              { label: "v3.5", value: "chirp-v3-5" },
+              { label: "v3", value: "chirp-v3" },
+              { label: "v2", value: "chirp-v2" }
+            ],
+          },
+        },
+        {
           component: "Divider",
           label: "💾存储",
           componentProps: {
